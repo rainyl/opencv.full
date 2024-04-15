@@ -46,20 +46,20 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: upload-android-x86_64
         with:
-          path: build/publish/${LIB_NAME}-android-x86_64.tar.gz
-          name: ${LIB_NAME}-android-x86_64.tar.gz
+          path: build/publish/libopencv-android-x86_64.tar.gz
+          name: libopencv-android-x86_64.tar.gz
 
       - uses: actions/upload-artifact@v4
         name: upload-android-arm64-v8a
         with:
-          path: build/publish/${LIB_NAME}-android-arm64-v8a.tar.gz
-          name: ${LIB_NAME}-android-arm64-v8a.tar.gz
+          path: build/publish/libopencv-android-arm64-v8a.tar.gz
+          name: libopencv-android-arm64-v8a.tar.gz
 
       - uses: actions/upload-artifact@v4
         name: upload-android-armeabi-v7a
         with:
-          path: build/publish/${LIB_NAME}-android-armeabi-v7a.tar.gz
-          name: ${LIB_NAME}-android-armeabi-v7a.tar.gz
+          path: build/publish/libopencv-android-armeabi-v7a.tar.gz
+          name: libopencv-android-armeabi-v7a.tar.gz
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -67,9 +67,9 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            build/publish/${LIB_NAME}-android-arm64-v8a.tar.gz
-            build/publish/${LIB_NAME}-android-armeabi-v7a.tar.gz
-            build/publish/${LIB_NAME}-android-x86_64.tar.gz
+            build/publish/libopencv-android-arm64-v8a.tar.gz
+            build/publish/libopencv-android-armeabi-v7a.tar.gz
+            build/publish/libopencv-android-x86_64.tar.gz
 
   build-ubuntu:
     name: build-ubuntu
@@ -97,8 +97,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: upload-linux-x64
         with:
-          path: build/publish/${LIB_NAME}-linux-x64.tar.gz
-          name: ${LIB_NAME}-linux-x64.tar.gz
+          path: build/publish/libopencv-linux-x64.tar.gz
+          name: libopencv-linux-x64.tar.gz
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -106,7 +106,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            build/publish/${LIB_NAME}-linux-x64.tar.gz
+            build/publish/libopencv-linux-x64.tar.gz
 
   build-windows:
     name: build-windows
@@ -127,8 +127,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: upload-windows-x64
         with:
-          path: build/publish/${LIB_NAME}-windows-x64.tar.gz
-          name: ${LIB_NAME}-windows-x64.tar.gz
+          path: build/publish/libopencv-windows-x64.tar.gz
+          name: libopencv-windows-x64.tar.gz
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -136,7 +136,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            build/publish/${LIB_NAME}-windows-x64.tar.gz
+            build/publish/libopencv-windows-x64.tar.gz
   build-macos:
     name: build-macos
     runs-on: macos-latest
@@ -156,8 +156,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: upload-macos-x64
         with:
-          path: build/publish/${LIB_NAME}-macos-x64.tar.gz
-          name: ${LIB_NAME}-macos-x64.tar.gz
+          path: build/publish/libopencv-macos-x64.tar.gz
+          name: libopencv-macos-x64.tar.gz
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -165,7 +165,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            build/publish/${LIB_NAME}-macos-x64.tar.gz
+            build/publish/libopencv-macos-x64.tar.gz
   build-macos-arm64:
     name: build-macos-arm64
     runs-on: macos-14
@@ -187,8 +187,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: upload-macos-arm64
         with:
-          path: build/publish/${LIB_NAME}-macos-arm64.tar.gz
-          name: ${LIB_NAME}-macos-arm64.tar.gz
+          path: build/publish/libopencv-macos-arm64.tar.gz
+          name: libopencv-macos-arm64.tar.gz
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -196,7 +196,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            build/publish/${LIB_NAME}-macos-arm64.tar.gz
+            build/publish/libopencv-macos-arm64.tar.gz
   build-ios:
       name: build-ios
       runs-on: macos-14
@@ -220,13 +220,13 @@ jobs:
         - uses: actions/upload-artifact@v4
           name: upload
           with:
-            path: build/publish/${LIB_NAME}-ios-arm64.tar.gz
-            name: ${LIB_NAME}-ios-arm64.tar.gz
+            path: build/publish/libopencv-ios-arm64.tar.gz
+            name: libopencv-ios-arm64.tar.gz
         - uses: actions/upload-artifact@v4
           name: upload x64
           with:
-            path: build/publish/${LIB_NAME}-ios-x64.tar.gz
-            name: ${LIB_NAME}-ios-x64.tar.gz
+            path: build/publish/libopencv-ios-x64.tar.gz
+            name: libopencv-ios-x64.tar.gz
         - name: Release
           uses: softprops/action-gh-release@v1
           if: startsWith(github.ref, 'refs/tags/')
@@ -234,5 +234,5 @@ jobs:
             draft: true
             prerelease: false
             files: |
-              build/publish/${LIB_NAME}-ios-arm64.tar.gz
-              build/publish/${LIB_NAME}-ios-x64.tar.gz
+              build/publish/libopencv-ios-arm64.tar.gz
+              build/publish/libopencv-ios-x64.tar.gz
