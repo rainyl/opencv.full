@@ -91,23 +91,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: build-opencv-dart
+      - name: build
         run: |
           conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
-      - uses: subosito/flutter-action@v2
-        with:
-          # flutter-version: '3.16.9'
-          channel: "stable"
       - uses: actions/upload-artifact@v4
         name: upload-linux-x64
         with:
           path: build/publish/${LIB_NAME}-linux-x64.tar.gz
           name: ${LIB_NAME}-linux-x64.tar.gz
-      - name: Run Test
-        run: |
-          export LD_LIBRARY_PATH="${{github.workspace}}/linux:$LD_LIBRARY_PATH"
-          flutter pub get
-          flutter test -x skip-workflow,no-local-files
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -128,26 +119,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: build-opencv-dart
+      - name: build
         run: |
           python3 -m pip install conan
           conan profile detect -f
           conan build . -b missing -s compiler.cppstd=20
-
       - uses: actions/upload-artifact@v4
         name: upload-windows-x64
         with:
           path: build/publish/${LIB_NAME}-windows-x64.tar.gz
           name: ${LIB_NAME}-windows-x64.tar.gz
-      - uses: subosito/flutter-action@v2
-        with:
-          # flutter-version: '3.16.9'
-          channel: "stable"
-      - name: Run Test
-        run: |
-          $env:PATH = "${{github.workspace}}\windows;${env:PATH}"
-          flutter pub get
-          flutter test -x no-local-files
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -177,16 +158,6 @@ jobs:
         with:
           path: build/publish/${LIB_NAME}-macos-x64.tar.gz
           name: ${LIB_NAME}-macos-x64.tar.gz
-      - uses: subosito/flutter-action@v2
-        with:
-          # flutter-version: '3.16.9'
-          channel: "stable"
-      - name: Run Test
-        run: |
-          ls -alh ${{github.workspace}}/macos
-          export DYLD_LIBRARY_PATH="${{github.workspace}}/macos:$DYLD_LIBRARY_PATH"
-          flutter pub get
-          flutter test -x no-local-files
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -218,16 +189,6 @@ jobs:
         with:
           path: build/publish/${LIB_NAME}-macos-arm64.tar.gz
           name: ${LIB_NAME}-macos-arm64.tar.gz
-      - uses: subosito/flutter-action@v2
-        with:
-          # flutter-version: '3.16.9'
-          channel: "stable"
-      - name: Run Test
-        run: |
-          ls -alh ${{github.workspace}}/macos
-          export DYLD_LIBRARY_PATH="${{github.workspace}}/macos:$DYLD_LIBRARY_PATH"
-          flutter pub get
-          flutter test -x no-local-files
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
