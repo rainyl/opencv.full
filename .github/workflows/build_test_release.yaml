@@ -3,7 +3,7 @@ name: OPENCV build release
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "*.*.*"
 
 env:
   ANDROID_NDK_VERSION: r26c
