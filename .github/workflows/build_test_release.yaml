@@ -4,8 +4,8 @@ on:
   push:
     tags:
       - "*.*.*"
-    branches:
-      - main
+    # branches:
+    #   - main
 
 env:
   ANDROID_NDK_VERSION: r26c
@@ -13,148 +13,132 @@ env:
   LIB_NAME: libopencv
 
 jobs:
-  # build-android:
-  #   name: build-android
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: true
-  #     - name: setup
-  #       run: |
-  #         sudo apt-get update
+  build-android:
+    name: build-android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: setup
+        run: |
+          sudo apt-get update
 
-  #         sudo apt-get install -y build-essential libgtk-3-dev ffmpeg libavcodec-dev \
-  #           cmake ninja-build nasm libavformat-dev libavutil-dev libswscale-dev \
-  #           libgflags-dev python3 unzip tree python3-pip
+          sudo apt-get install -y build-essential libgtk-3-dev ffmpeg libavcodec-dev \
+            cmake ninja-build nasm libavformat-dev libavutil-dev libswscale-dev \
+            libgflags-dev python3 unzip tree python3-pip
 
-  #         python3 -m pip install conan
-  #         conan profile detect -f
+          python3 -m pip install conan
+          conan profile detect -f
 
-  #         cd ${{github.workspace}}
-  #         mkdir -p build/android
+          cd ${{github.workspace}}
+          mkdir -p build/android
 
-  #         wget -q -O build/android-ndk-$ANDROID_NDK_VERSION-linux.zip \
-  #           https://dl.google.com/android/repository/android-ndk-$ANDROID_NDK_VERSION-linux.zip
-  #         unzip -q -o build/android-ndk-$ANDROID_NDK_VERSION-linux.zip -d build/
-  #     - name: build-android
-  #       run: |
-  #         conan build . -b missing -pr:h profiles/android-x86_64 \
-  #           -c tools.android:ndk_path="`pwd`/build/android-ndk-$ANDROID_NDK_VERSION"
-  #         conan build . -b missing -pr:h profiles/android-armv8 \
-  #           -c tools.android:ndk_path="`pwd`/build/android-ndk-$ANDROID_NDK_VERSION"
-  #         conan build . -b missing -pr:h profiles/android-armv7 \
-  #           -c tools.android:ndk_path="`pwd`/build/android-ndk-$ANDROID_NDK_VERSION"
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload-android-x86_64
-  #       with:
-  #         path: build/publish/libopencv-android-x86_64.tar.gz
-  #         name: libopencv-android-x86_64.tar.gz
+          wget -q -O build/android-ndk-$ANDROID_NDK_VERSION-linux.zip \
+            https://dl.google.com/android/repository/android-ndk-$ANDROID_NDK_VERSION-linux.zip
+          unzip -q -o build/android-ndk-$ANDROID_NDK_VERSION-linux.zip -d build/
+      - name: build-android
+        run: |
+          conan build . -b missing -pr:h profiles/android-x86_64 \
+            -c tools.android:ndk_path="`pwd`/build/android-ndk-$ANDROID_NDK_VERSION"
+          conan build . -b missing -pr:h profiles/android-armv8 \
+            -c tools.android:ndk_path="`pwd`/build/android-ndk-$ANDROID_NDK_VERSION"
+          conan build . -b missing -pr:h profiles/android-armv7 \
+            -c tools.android:ndk_path="`pwd`/build/android-ndk-$ANDROID_NDK_VERSION"
+      - uses: actions/upload-artifact@v4
+        name: upload-android-x86_64
+        with:
+          path: build/publish/libopencv-android-x86_64.tar.gz
+          name: libopencv-android-x86_64.tar.gz
 
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload-android-arm64-v8a
-  #       with:
-  #         path: build/publish/libopencv-android-arm64-v8a.tar.gz
-  #         name: libopencv-android-arm64-v8a.tar.gz
+      - uses: actions/upload-artifact@v4
+        name: upload-android-arm64-v8a
+        with:
+          path: build/publish/libopencv-android-arm64-v8a.tar.gz
+          name: libopencv-android-arm64-v8a.tar.gz
 
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload-android-armeabi-v7a
-  #       with:
-  #         path: build/publish/libopencv-android-armeabi-v7a.tar.gz
-  #         name: libopencv-android-armeabi-v7a.tar.gz
-  #     - name: Release
-  #       uses: softprops/action-gh-release@v1
-  #       if: startsWith(github.ref, 'refs/tags/')
-  #       with:
-  #         draft: true
-  #         prerelease: false
-  #         files: |
-  #           build/publish/libopencv-android-arm64-v8a.tar.gz
-  #           build/publish/libopencv-android-armeabi-v7a.tar.gz
-  #           build/publish/libopencv-android-x86_64.tar.gz
+      - uses: actions/upload-artifact@v4
+        name: upload-android-armeabi-v7a
+        with:
+          path: build/publish/libopencv-android-armeabi-v7a.tar.gz
+          name: libopencv-android-armeabi-v7a.tar.gz
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            build/publish/libopencv-android-arm64-v8a.tar.gz
+            build/publish/libopencv-android-armeabi-v7a.tar.gz
+            build/publish/libopencv-android-x86_64.tar.gz
 
-  # build-ubuntu:
-  #   name: build-ubuntu
-  #   runs-on: ubuntu-latest
+  build-ubuntu:
+    name: build-ubuntu
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: setup
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install -y curl git wget python3 unzip build-essential \
-  #           libgtk-3-dev ffmpeg libavcodec-dev \
-  #           cmake ninja-build nasm libavformat-dev libavutil-dev \
-  #           libswscale-dev libgflags-dev \
-  #           libjpeg-dev libpng-dev libtiff-dev python3-pip
+    steps:
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git wget python3 unzip build-essential \
+            libgtk-3-dev ffmpeg libavcodec-dev \
+            cmake ninja-build nasm libavformat-dev libavutil-dev \
+            libswscale-dev libgflags-dev \
+            libjpeg-dev libpng-dev libtiff-dev python3-pip
 
-  #         python3 -m pip install conan
-  #         conan profile detect -f
+          python3 -m pip install conan
+          conan profile detect -f
 
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: true
-  #     - name: build
-  #       run: |
-  #         conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload-linux-x64
-  #       with:
-  #         path: build/publish/libopencv-linux-x64.tar.gz
-  #         name: libopencv-linux-x64.tar.gz
-  #     - name: Release
-  #       uses: softprops/action-gh-release@v1
-  #       if: startsWith(github.ref, 'refs/tags/')
-  #       with:
-  #         draft: true
-  #         prerelease: false
-  #         files: |
-  #           build/publish/libopencv-linux-x64.tar.gz
-  # build-linux-aarch64:
-  #   runs-on: ubuntu-latest
-  #   container: gcc:13
-  #   strategy:
-  #     fail-fast: false
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install CMake
-  #       run: |
-  #         apt update -y
-  #         apt install -y cmake
-  #       shell: bash
-  #     - name: Install Abseil, GoogleTest and Benchmark
-  #       run: |
-  #         apt update -y
-  #         apt install -y libabsl-dev libgtest-dev libbenchmark-dev
-  #       shell: bash
-  # build-windows:
-  #   name: build-windows
-  #   runs-on: windows-latest
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: build
+        run: |
+          conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
+      - uses: actions/upload-artifact@v4
+        name: upload-linux-x64
+        with:
+          path: build/publish/libopencv-linux-x64.tar.gz
+          name: libopencv-linux-x64.tar.gz
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            build/publish/libopencv-linux-x64.tar.gz
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: true
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.11"
-  #     - name: build
-  #       run: |
-  #         python3 -m pip install conan
-  #         conan profile detect -f
-  #         conan build . -b missing -s compiler.cppstd=20
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload-windows-x64
-  #       with:
-  #         path: build/publish/libopencv-windows-x64.tar.gz
-  #         name: libopencv-windows-x64.tar.gz
-  #     - name: Release
-  #       uses: softprops/action-gh-release@v1
-  #       if: startsWith(github.ref, 'refs/tags/')
-  #       with:
-  #         draft: true
-  #         prerelease: false
-  #         files: |
-  #           build/publish/libopencv-windows-x64.tar.gz
+  build-windows:
+    name: build-windows
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: build
+        run: |
+          python3 -m pip install conan
+          conan profile detect -f
+          conan build . -b missing -s compiler.cppstd=20
+      - uses: actions/upload-artifact@v4
+        name: upload-windows-x64
+        with:
+          path: build/publish/libopencv-windows-x64.tar.gz
+          name: libopencv-windows-x64.tar.gz
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            build/publish/libopencv-windows-x64.tar.gz
   build-macos:
     name: build-macos
     runs-on: macos-latest
@@ -216,42 +200,42 @@ jobs:
           prerelease: false
           files: |
             build/publish/libopencv-macos-arm64.tar.gz
-  # build-ios:
-  #   name: build-ios
-  #   runs-on: macos-14
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: true
-  #     - name: setup
-  #       run: |
-  #         brew install --force --overwrite ninja ccache ffmpeg@6 nasm conan
-  #         conan profile detect -f
-  #         cd ${{github.workspace}}
-  #     - name: build
-  #       run: |
-  #         echo "tools.cmake.cmaketoolchain:user_toolchain=[\"`pwd`/profiles/ios.toolchain.cmake\"]" >> profiles/ios-armv8
-  #         conan build . -b missing -pr:h profiles/ios-armv8
+  build-ios:
+    name: build-ios
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: setup
+        run: |
+          brew install --force --overwrite ninja ccache ffmpeg@6 nasm conan
+          conan profile detect -f
+          cd ${{github.workspace}}
+      - name: build
+        run: |
+          echo "tools.cmake.cmaketoolchain:user_toolchain=[\"`pwd`/profiles/ios.toolchain.cmake\"]" >> profiles/ios-armv8
+          conan build . -b missing -pr:h profiles/ios-armv8
 
-  #         echo "tools.cmake.cmaketoolchain:user_toolchain=[\"`pwd`/profiles/ios.toolchain.cmake\"]" >> profiles/ios-x86_64
-  #         conan build . -b missing -pr:h profiles/ios-x86_64
+          echo "tools.cmake.cmaketoolchain:user_toolchain=[\"`pwd`/profiles/ios.toolchain.cmake\"]" >> profiles/ios-x86_64
+          conan build . -b missing -pr:h profiles/ios-x86_64
 
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload
-  #       with:
-  #         path: build/publish/libopencv-ios-arm64.tar.gz
-  #         name: libopencv-ios-arm64.tar.gz
-  #     - uses: actions/upload-artifact@v4
-  #       name: upload x64
-  #       with:
-  #         path: build/publish/libopencv-ios-x64.tar.gz
-  #         name: libopencv-ios-x64.tar.gz
-  #     - name: Release
-  #       uses: softprops/action-gh-release@v1
-  #       if: startsWith(github.ref, 'refs/tags/')
-  #       with:
-  #         draft: true
-  #         prerelease: false
-  #         files: |
-  #           build/publish/libopencv-ios-arm64.tar.gz
-  #           build/publish/libopencv-ios-x64.tar.gz
+      - uses: actions/upload-artifact@v4
+        name: upload
+        with:
+          path: build/publish/libopencv-ios-arm64.tar.gz
+          name: libopencv-ios-arm64.tar.gz
+      - uses: actions/upload-artifact@v4
+        name: upload x64
+        with:
+          path: build/publish/libopencv-ios-x64.tar.gz
+          name: libopencv-ios-x64.tar.gz
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            build/publish/libopencv-ios-arm64.tar.gz
+            build/publish/libopencv-ios-x64.tar.gz
