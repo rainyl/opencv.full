@@ -141,7 +141,7 @@ jobs:
             build/publish/libopencv-windows-x64.tar.gz
   build-macos:
     name: build-macos
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
         with:
