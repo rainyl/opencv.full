@@ -45,7 +45,7 @@ OCV_MODULES = {
     "highgui": True,
     "imgcodecs": True,
     "imgproc": True,
-    "ml": False,  # not implemented
+    "ml": True,  # not implemented
     "objdetect": True,
     "photo": True,
     "stitching": True,
