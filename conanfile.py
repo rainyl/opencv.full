@@ -10,7 +10,7 @@ import tarfile
 from pathlib import Path
 import yaml
 
-OPENCV_VERSION = "4.10.0"
+OPENCV_VERSION = "4.9.0"
 
 # for compatibility
 arch_map = {
