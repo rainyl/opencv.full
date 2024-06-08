@@ -327,6 +327,7 @@ class OcvDartDesktop(ConanFile):
         tc.variables["ENABLE_NEON"] = self.get_bool("neon", False)
         tc.variables["OPENCV_DNN_CUDA"] = self.get_bool("dnn_cuda", False)
         tc.variables["WITH_OPENVINO"] = False
+        tc.variables["WITH_OBSENSOR"] = self.get_bool("with_obsensor", False)
         tc.variables["WITH_AVIF"] = self.get_bool("with_avif", False)
         tc.variables["BUILD_opencv_world"] = self.get_bool("world", False)
         tc.variables["BUILD_opencv_core"] = True
