@@ -1,14 +1,13 @@
 import os
 from conan import ConanFile
 from conan.api.output import ConanOutput, Color
+from conan.tools.env import Environment
 from conan.errors import ConanInvalidConfiguration, ConanException
 from conan.tools.cmake import cmake_layout, CMake, CMakeToolchain, CMakeDeps
-from conan.tools.files import chdir, mkdir, copy
 from conan.tools.scm import Git
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 import tarfile
 from pathlib import Path
-import yaml
 
 OPENCV_VERSION = "4.10.0"
 
@@ -19,6 +18,7 @@ arch_map = {
     },
     "linux": {
         "x86_64": "x64",
+        "armv8": "arm64",
     },
     "android": {
         "x86_64": "x86_64",
@@ -33,6 +33,9 @@ arch_map = {
         "x86_64": "x64",
         "armv8": "arm64",
     },
+    "emscripten": {
+        "wasm": "wasm",
+    }
 }
 
 # (name, enabled)
@@ -231,6 +234,11 @@ class OcvDartDesktop(ConanFile):
             )
             # tc.variables["CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM"] = "rainyl"
             # tc.variables["CODE_SIGNING_ALLOWED"] = "NO"
+        if self.settings.os == "Emscripten":
+            env = Environment()
+            env.define_path("EM_CACHE", os.path.join(self.build_folder, ".emcache"))
+            envvars = env.vars(self, scope="build")
+            envvars.save_script("em_cache")
         tc.variables["BUILD_CUDA_STUBS"] = False
         tc.variables["BUILD_DOCS"] = False
         tc.variables["BUILD_EXAMPLES"] = False
@@ -362,18 +370,20 @@ class OcvDartDesktop(ConanFile):
         self.opencv_contrib_repo = os.path.join(root, "build", "opencv_contrib")
         git = Git(self)
         if not os.path.exists(self.opencv_repo):
-            git.clone("https://github.com/opencv/opencv.git", self.opencv_repo, [f"-b {OPENCV_VERSION}"])
+            git.clone(
+                "https://github.com/opencv/opencv.git",
+                self.opencv_repo,
+                [f"-b {OPENCV_VERSION}"],
+            )
         if not os.path.exists(self.opencv_contrib_repo):
             git.clone(
                 "https://github.com/opencv/opencv_contrib.git",
                 self.opencv_contrib_repo,
-                [f"-b {OPENCV_VERSION}"]
+                [f"-b {OPENCV_VERSION}"],
             )
 
     def build_requirements(self):
-        self.tool_requires("cmake/3.28.1")
-        # self.tool_requires("nasm/2.16.01")
-        # self.tool_requires("ccache/4.9.1")
+        self.tool_requires("cmake/3.29.3")
         if self.settings.os != "Windows":
             self.tool_requires("ninja/1.11.1")
 
@@ -403,7 +413,6 @@ class OcvDartDesktop(ConanFile):
             cmake.build(target="install")
         else:
             ConanOutput().writeln("Skipping opencv build...", fg=Color.YELLOW)
-        ocv_install_dir = self.opencv_dir(self.install_folder)
 
         self.post_build()
 
