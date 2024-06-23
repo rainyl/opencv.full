@@ -82,10 +82,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y curl git wget python3 unzip build-essential \
-            libgtk-3-dev ffmpeg libavcodec-dev \
-            cmake ninja-build libavformat-dev libavutil-dev \
-            libswscale-dev libgflags-dev \
-            libjpeg-dev libpng-dev libtiff-dev python3-pip
+            libgtk-3-dev python3-pip
 
           python3 -m pip install conan
           conan profile detect -f
@@ -93,6 +90,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+      - uses: FedericoCarboni/setup-ffmpeg@v3
+        id: setup-ffmpeg
+        with:
+          ffmpeg-version: "6.0.1"
+          # Target architecture of the ffmpeg executable to install. Defaults to the
+          # system architecture. Only x64 and arm64 are supported (arm64 only on Linux).
+          architecture: 'x64'
+          # Linking type of the binaries. Use "shared" to download shared binaries and 
+          # "static" for statically linked ones. Shared builds are currently only available
+          # for windows releases. Defaults to "static"
+          linking-type: static
+          # As of version 3 of this action, builds are no longer downloaded from GitHub
+          # except on Windows: https://github.com/GyanD/codexffmpeg/releases.
+          github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
       - name: build
         run: |
           conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
@@ -154,7 +165,7 @@ jobs:
           cd ${{github.workspace}}
       - name: build
         run: |
-          conan build . -b missing
+          conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
 
       - uses: actions/upload-artifact@v4
         name: upload-macos-x64
@@ -184,7 +195,7 @@ jobs:
           cd ${{github.workspace}}
       - name: build
         run: |
-          conan build . -b missing
+          conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
           ls -alh build/Macos
 
       - uses: actions/upload-artifact@v4
