@@ -102,7 +102,7 @@ jobs:
           github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
       - name: build
         run: |
-          conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
+          conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja -c tools.system.package_manager:mode=install
       - uses: actions/upload-artifact@v4
         name: upload-linux-x64
         with:
