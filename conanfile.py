@@ -8,7 +8,6 @@ from conan.tools.scm import Git
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 import tarfile
 from pathlib import Path
-import yaml
 
 OPENCV_VERSION = "4.10.0"
 
@@ -374,6 +373,7 @@ class OcvDartDesktop(ConanFile):
         self.tool_requires("cmake/3.28.1")
         # self.tool_requires("nasm/2.16.01")
         # self.tool_requires("ccache/4.9.1")
+        self.requires("ffmpeg/6.1")
         if self.settings.os != "Windows":
             self.tool_requires("ninja/1.11.1")
 
