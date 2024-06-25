@@ -161,7 +161,16 @@ class OcvDartDesktop(ConanFile):
         "nonfree": [True, False],
     }
     options.update({k: [True, False] for k in OCV_MODULES})
+    default_build_options = {
+        "ffmpeg/*:with_vaapi": False,
+        "ffmpeg/*:with_vdpau": False,
+        "ffmpeg/*:with_xcb": False,
+        "pulseaudio/*:with_x11": False,
+    }
     default_options = {
+        "ffmpeg/*:with_vaapi": False,
+        "ffmpeg/*:with_vdpau": False,
+        "ffmpeg/*:with_xcb": False,
         "build_opencv": True,
         "shared": False,
         "with_cuda": False,
@@ -374,6 +383,7 @@ class OcvDartDesktop(ConanFile):
         # self.tool_requires("nasm/2.16.01")
         # self.tool_requires("ccache/4.9.1")
         if self.settings.os != "Windows":
+            self.tool_requires("ffmpeg/6.1")
             self.tool_requires("ninja/1.11.1")
 
     def layout(self):
