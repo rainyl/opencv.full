@@ -382,8 +382,13 @@ class OcvDartDesktop(ConanFile):
         self.tool_requires("cmake/3.28.1")
         # self.tool_requires("nasm/2.16.01")
         # self.tool_requires("ccache/4.9.1")
-        if self.settings.os != "Windows":
+
+        # build ffmpeg only for linux, on macos, install with brew,
+        # on windows use prebuilt dll
+        # android and ios are unsupported
+        if self.settings.os == "Linux":
             self.tool_requires("ffmpeg/6.1")
+        if self.settings.os != "Windows":
             self.tool_requires("ninja/1.11.1")
 
     def layout(self):
