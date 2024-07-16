@@ -1,4 +1,4 @@
-name: OPENCV build release
+name: ubuntu 24.04 aarch64
 
 on:
   push:
