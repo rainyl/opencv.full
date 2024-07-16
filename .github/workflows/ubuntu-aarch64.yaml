@@ -1,0 +1,47 @@
+name: ubuntu 24.04 aarch64
+
+on:
+  push:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-ubuntu:
+    name: build-ubuntu
+    runs-on: self-hosted
+
+    steps:
+      - name: Install Conan
+        id: conan
+        uses: imesense/gha-setup-conan@v0.1
+      - name: setup
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y curl git wget python3 unzip build-essential \
+            libgtk-3-dev ffmpeg libavcodec-dev \
+            cmake ninja-build libavformat-dev libavutil-dev \
+            libswscale-dev libgflags-dev \
+            libjpeg-dev libpng-dev libtiff-dev
+
+          conan profile detect -f
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: build
+        run: |
+          conan build . -b missing -c tools.cmake.cmaketoolchain:generator=Ninja
+      - uses: actions/upload-artifact@v4
+        name: upload-linux-x64
+        with:
+          path: build/publish/libopencv-linux-x64.tar.gz
+          name: libopencv-linux-x64.tar.gz
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            build/publish/libopencv-linux-x64.tar.gz

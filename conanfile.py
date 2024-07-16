@@ -386,8 +386,8 @@ class OcvDartDesktop(ConanFile):
         # build ffmpeg only for linux, on macos, install with brew,
         # on windows use prebuilt dll
         # android and ios are unsupported
-        if self.settings.os == "Linux":
-            self.tool_requires("ffmpeg/6.1")
+        # if self.settings.os == "Linux":
+        #     self.tool_requires("ffmpeg/6.1")
         if self.settings.os != "Windows":
             self.tool_requires("ninja/1.11.1")
 
