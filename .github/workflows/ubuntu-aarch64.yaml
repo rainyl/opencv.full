@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Install Conan
         id: conan
-        uses: turtlebrowser/get-conan@main
+        uses: imesense/gha-setup-conan@v0.1
       - name: setup
         run: |
           sudo apt-get update
