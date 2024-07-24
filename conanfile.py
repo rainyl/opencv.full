@@ -183,7 +183,7 @@ class OcvDartDesktop(ConanFile):
         "with_obsensor": False,
         "with_ipp": "opencv-icv",
         "with_protobuf": True,
-        "with_vulkan": False,
+        "with_vulkan": True,
         # imgcodecs module options
         "with_avif": False,
         "with_jpeg": "libjpeg-turbo",
