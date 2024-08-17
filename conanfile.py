@@ -112,6 +112,7 @@ OCV_MODULES = {
     "sfm": False,
     "ts": False,
     "viz": False,
+    "quality":True,
 }
 
 
