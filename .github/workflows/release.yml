@@ -12,9 +12,6 @@ env:
   IOS_DEPLOYMENT_TARGET: '13.0'
   MAC_DEPLOYMENT_TARGET: '11.0'
   MAC_CATALYST_DEPLOYMENT_TARGET: '13.1'
-  WATCHOS_DEPLOYMENT_TARGET: '6.0'
-  TVOS_DEPLOYMENT_TARGET: '11.0'
-  VISIONOS_DEPLOYMENT_TARGET: '1.0'
   ENABLE_BITCODE: OFF
   ENABLE_ARC: OFF
   ENABLE_VISIBILITY: OFF
@@ -37,6 +34,7 @@ jobs:
         -DANDROID_PLATFORM=android-24 \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: ndk-fix-debug
@@ -134,10 +132,9 @@ jobs:
         -DENABLE_BITCODE=$ENABLE_BITCODE \
         -DENABLE_ARC=$ENABLE_ARC \
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
-        -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions" \
-        -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions" \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -203,10 +200,9 @@ jobs:
         -DENABLE_BITCODE=$ENABLE_BITCODE \
         -DENABLE_ARC=$ENABLE_ARC \
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
-        -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions" \
-        -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions" \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -276,10 +272,9 @@ jobs:
         opencv-version: [4.10.0]
     env:
       COMMON_CMAKE_OPTIONS: |
-        -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions" \
-        -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions" \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - name: arm-gnu-toolchain
       run: |
@@ -374,6 +369,7 @@ jobs:
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -460,6 +456,7 @@ jobs:
         -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions" \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -533,7 +530,7 @@ jobs:
     runs-on: windows-${{ matrix.os-compiler.windows-version }}
     env:
       UseMultiToolTask: true
-      COMMON_CMAKE_OPTIONS: -T ${{ matrix.os-compiler.toolset-version }},host=x64 -DCMAKE_INSTALL_PREFIX=install
+      COMMON_CMAKE_OPTIONS: -T ${{ matrix.os-compiler.toolset-version }},host=x64 -DCMAKE_INSTALL_PREFIX=install -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" 
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -635,7 +632,7 @@ jobs:
           - { ubuntu-id: 2204, ubuntu-version: 22.04 }
     runs-on: ubuntu-${{ matrix.os-ubuntu.ubuntu-version }}
     env:
-      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release
+      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" 
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -686,6 +683,7 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: emsdk
@@ -823,12 +821,6 @@ jobs:
         echo "IOS_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-ios" >> $GITHUB_ENV
         echo "IOS_SIMULATOR_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-ios-simulator" >> $GITHUB_ENV
         echo "MAC_CATALYST_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-mac-catalyst" >> $GITHUB_ENV
-        echo "WATCHOS_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-watchos" >> $GITHUB_ENV
-        echo "WATCHOS_SIMULATOR_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-watchos-simulator" >> $GITHUB_ENV
-        echo "TVOS_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-tvos" >> $GITHUB_ENV
-        echo "TVOS_SIMULATOR_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-tvos-simulator" >> $GITHUB_ENV
-        echo "VISIONOS_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-visionos" >> $GITHUB_ENV
-        echo "VISIONOS_SIMULATOR_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-visionos-simulator" >> $GITHUB_ENV
         echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-apple" >> $GITHUB_ENV
     - name: download-macos-package
       uses: actions/download-artifact@v4
@@ -846,63 +838,21 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: ${{ env.MAC_CATALYST_PACKAGE_NAME }}
-    - name: download-watchos-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.WATCHOS_PACKAGE_NAME }}
-    - name: download-watchos-simulator-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.WATCHOS_SIMULATOR_PACKAGE_NAME }}
-    - name: download-tvos-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.TVOS_PACKAGE_NAME }}
-    - name: download-tvos-simulator-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.TVOS_SIMULATOR_PACKAGE_NAME }}
-    - name: download-visionos-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.VISIONOS_PACKAGE_NAME }}
-    - name: download-visionos-simulator-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.VISIONOS_SIMULATOR_PACKAGE_NAME }}
     - name: create-xcframwork
       run: |
         mkdir -p ${{ env.MACOS_PACKAGE_NAME }}
         mkdir -p ${{ env.IOS_PACKAGE_NAME }}
         mkdir -p ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}
         mkdir -p ${{ env.MAC_CATALYST_PACKAGE_NAME }}
-        mkdir -p ${{ env.WATCHOS_PACKAGE_NAME }}
-        mkdir -p ${{ env.WATCHOS_SIMULATOR_PACKAGE_NAME }}
-        mkdir -p ${{ env.TVOS_PACKAGE_NAME }}
-        mkdir -p ${{ env.TVOS_SIMULATOR_PACKAGE_NAME }}
-        mkdir -p ${{ env.VISIONOS_PACKAGE_NAME }}
-        mkdir -p ${{ env.VISIONOS_SIMULATOR_PACKAGE_NAME }}
         unzip -q ${{ env.MACOS_PACKAGE_NAME }}.zip -d ${{ env.MACOS_PACKAGE_NAME }}
         unzip -q ${{ env.IOS_PACKAGE_NAME }}.zip -d ${{ env.IOS_PACKAGE_NAME }}
         unzip -q ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}.zip -d ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}
         unzip -q ${{ env.MAC_CATALYST_PACKAGE_NAME }}.zip -d ${{ env.MAC_CATALYST_PACKAGE_NAME }}
-        unzip -q ${{ env.WATCHOS_PACKAGE_NAME }}.zip -d ${{ env.WATCHOS_PACKAGE_NAME }}
-        unzip -q ${{ env.WATCHOS_SIMULATOR_PACKAGE_NAME }}.zip -d ${{ env.WATCHOS_SIMULATOR_PACKAGE_NAME }}
-        unzip -q ${{ env.TVOS_PACKAGE_NAME }}.zip -d ${{ env.TVOS_PACKAGE_NAME }}
-        unzip -q ${{ env.TVOS_SIMULATOR_PACKAGE_NAME }}.zip -d ${{ env.TVOS_SIMULATOR_PACKAGE_NAME }}
-        unzip -q ${{ env.VISIONOS_PACKAGE_NAME }}.zip -d ${{ env.VISIONOS_PACKAGE_NAME }}
-        unzip -q ${{ env.VISIONOS_SIMULATOR_PACKAGE_NAME }}.zip -d ${{ env.VISIONOS_SIMULATOR_PACKAGE_NAME }}
         xcodebuild -create-xcframework \
             -framework ${{ env.MACOS_PACKAGE_NAME }}/opencv2.framework \
             -framework ${{ env.IOS_PACKAGE_NAME }}/opencv2.framework \
             -framework ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}/opencv2.framework \
             -framework ${{ env.MAC_CATALYST_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.WATCHOS_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.WATCHOS_SIMULATOR_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.TVOS_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.TVOS_SIMULATOR_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.VISIONOS_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.VISIONOS_SIMULATOR_PACKAGE_NAME }}/opencv2.framework \
             -output opencv2.xcframework
         rm -f ${{ env.PACKAGE_NAME }}.zip
         zip -9 -y -r ${{ env.PACKAGE_NAME }}.zip opencv2.xcframework
