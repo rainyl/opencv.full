@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.5)
 # opencv4 requires c++11
 set(CMAKE_CXX_STANDARD 11)
 
+if(LINUX OR APPLE)
+    find_package(Iconv REQUIRED)
+endif()
+
 if(APPLE OR IOS)
     # set OpenCV_DIR to where opencv2.framework resides
     find_library(OpenCV_LIBS NAMES opencv2 PATHS ${OpenCV_DIR})
