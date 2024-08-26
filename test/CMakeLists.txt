@@ -12,13 +12,7 @@ if(LINUX OR APPLE)
     find_package(Iconv REQUIRED)
 endif()
 
-if(APPLE OR IOS)
-    # set OpenCV_DIR to where opencv2.framework resides
-    find_library(OpenCV_LIBS NAMES opencv2 PATHS ${OpenCV_DIR})
-else()
-    # set OpenCV_DIR to where OpenCVConfig.cmake resides
-    find_package(OpenCV REQUIRED)
-endif()
+find_package(OpenCV REQUIRED)
 
 add_executable(opencv-mobile-test main.cpp)
 target_include_directories(opencv-mobile-test PRIVATE ${OpenCV_INCLUDE_DIRS})

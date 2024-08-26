@@ -1,11 +1,10 @@
 name: android
-# on: pull_request
 on:
   push:
     tags:
       - '*'
-  pull_request:
-    branches: ["main"]
+  # pull_request:
+  #   branches: ["main"]
 
 permissions:
   contents: read

@@ -127,8 +127,8 @@ jobs:
       matrix:
         opencv-version: [4.10.0]
         osname: 
-          - {os: macos-13, name: x86_64, platform: MAC}
-          - {os: macos-14, name: arm64, platform: MAC_ARM64}
+          - {os: macos-13, arch: x86_64, platform: MAC}
+          - {os: macos-14, arch: arm64, platform: MAC_ARM64}
     runs-on: ${{ matrix.osname.os }}
     env:
       COMMON_CMAKE_OPTIONS: |
@@ -147,7 +147,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
         echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-${{ matrix.osname.platform }}" >> $GITHUB_ENV
+        echo "PACKAGE_NAME=opencv-${{ matrix.osname.arch }}" >> $GITHUB_ENV
         echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
     - name: build
       run: |
