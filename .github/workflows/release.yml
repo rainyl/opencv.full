@@ -34,7 +34,7 @@ jobs:
         -DANDROID_PLATFORM=android-24 \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: ndk-fix-debug
@@ -134,7 +134,7 @@ jobs:
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -202,7 +202,7 @@ jobs:
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -274,7 +274,7 @@ jobs:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - name: arm-gnu-toolchain
       run: |
@@ -369,7 +369,7 @@ jobs:
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -456,7 +456,7 @@ jobs:
         -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions" \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -530,7 +530,7 @@ jobs:
     runs-on: windows-${{ matrix.os-compiler.windows-version }}
     env:
       UseMultiToolTask: true
-      COMMON_CMAKE_OPTIONS: -T ${{ matrix.os-compiler.toolset-version }},host=x64 -DCMAKE_INSTALL_PREFIX=install -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" 
+      COMMON_CMAKE_OPTIONS: -T ${{ matrix.os-compiler.toolset-version }},host=x64 -DCMAKE_INSTALL_PREFIX=install -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" 
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -632,7 +632,7 @@ jobs:
           - { ubuntu-id: 2204, ubuntu-version: 22.04 }
     runs-on: ubuntu-${{ matrix.os-ubuntu.ubuntu-version }}
     env:
-      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" 
+      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" 
     steps:
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -683,7 +683,7 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../build/opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: emsdk
