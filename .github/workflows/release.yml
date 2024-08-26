@@ -52,7 +52,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-armeabi-v7a && cd build-armeabi-v7a
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-arm64-v8a
@@ -60,7 +60,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64-v8a && cd build-arm64-v8a
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="arm64-v8a" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON -DOPENCV_EXTRA_FLAGS="-mno-outline-atomics" ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON -DOPENCV_EXTRA_FLAGS="-mno-outline-atomics" ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-x86
@@ -68,7 +68,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86 && cd build-x86
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="x86" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-x86_64
@@ -76,7 +76,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86_64 && cd build-x86_64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="x86_64" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: package
@@ -156,7 +156,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="arm64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -225,7 +225,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86_64 && cd build-x86_64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="x86_64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -234,7 +234,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="arm64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -298,7 +298,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm-linux-gnueabi && cd build-arm-linux-gnueabi
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/arm-linux-gnueabi.toolchain.cmake \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-arm-linux-gnueabihf
@@ -306,7 +306,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm-linux-gnueabihf && cd build-arm-linux-gnueabihf
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/arm-linux-gnueabihf.toolchain.cmake \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-aarch64-linux-gnu
@@ -314,7 +314,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: package
@@ -392,7 +392,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86_64 && cd build-x86_64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=MAC -DARCHS="x86_64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -401,7 +401,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=MAC_ARM64 -DARCHS="arm64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -478,7 +478,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86_64 && cd build-x86_64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="x86_64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -487,7 +487,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="arm64" \
-            `cat ../options.txt` -DBUILD_opencv_world=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -546,14 +546,14 @@ jobs:
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86; cd build-x86
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A Win32 $(type ../options.txt) -DBUILD_opencv_world=OFF ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A Win32 $(type ../../options.txt) -DBUILD_opencv_world=OFF ..
         cmake --build . --config Release -j 4
         cmake --build . --config Release --target install
     - name: build-x64
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x64; cd build-x64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A x64 $(type ../options.txt) -DBUILD_opencv_world=OFF ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A x64 $(type ../../options.txt) -DBUILD_opencv_world=OFF ..
         cmake --build . --config Release -j 4
         cmake --build . --config Release --target install
     - name: build-arm
@@ -561,7 +561,7 @@ jobs:
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm; cd build-arm
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A arm -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM $(type ../options.txt) -DBUILD_opencv_world=OFF ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A arm -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM $(type ../../options.txt) -DBUILD_opencv_world=OFF ..
         cmake --build . --config Release -j 4
         cmake --build . --config Release --target install
     - name: build-arm64
@@ -569,7 +569,7 @@ jobs:
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64; cd build-arm64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A arm64 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM64 $(type ../options.txt) -DBUILD_opencv_world=OFF ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A arm64 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM64 $(type ../../options.txt) -DBUILD_opencv_world=OFF ..
         cmake --build . --config Release -j 4
         cmake --build . --config Release --target install
     - name: package
@@ -648,7 +648,7 @@ jobs:
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../options.txt` -DBUILD_opencv_world=OFF ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: package
@@ -710,7 +710,7 @@ jobs:
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
             -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0" \
             -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-simd
@@ -722,7 +722,7 @@ jobs:
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
             -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0 -msimd128" \
             -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0 -msimd128" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-threads
@@ -735,7 +735,7 @@ jobs:
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
             -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
             -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: build-simd-threads
@@ -747,7 +747,7 @@ jobs:
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
             -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
             -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
-            `cat ../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: package
