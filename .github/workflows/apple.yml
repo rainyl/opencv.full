@@ -43,6 +43,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
         echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
         echo "PACKAGE_NAME=opencv-ios" >> $GITHUB_ENV
+        echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
     - name: build-arm64
       run: |
         cd ${{ env.SOURCE_DIR }}
@@ -60,8 +61,8 @@ jobs:
       run: |
         cd test
         mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=OS64 \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.SOURCE_DIR }}/build/install/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j 4
     - name: upload-zip
       uses: actions/upload-artifact@v4
@@ -93,6 +94,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
         echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
         echo "PACKAGE_NAME=opencv-ios-${{ matrix.platform }}" >> $GITHUB_ENV
+        echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
     - name: build
       run: |
         cd ${{ env.SOURCE_DIR }}
@@ -111,8 +113,8 @@ jobs:
       run: |
         cd test
         mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="x86_64;arm64" \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=${{ matrix.platform }} \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.SOURCE_DIR }}/build/install/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j 4
     - name: upload-zip
       uses: actions/upload-artifact@v4
@@ -146,6 +148,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
         echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
         echo "PACKAGE_NAME=opencv-${{ matrix.osname.platform }}" >> $GITHUB_ENV
+        echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
     - name: build
       run: |
         cd ${{ env.SOURCE_DIR }}
@@ -163,7 +166,7 @@ jobs:
         cd test
         mkdir build && cd build
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=${{ matrix.osname.platform }} \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE ..
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.SOURCE_DIR }}/build/install/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j 4
     - name: upload-zip
       uses: actions/upload-artifact@v4

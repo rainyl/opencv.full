@@ -43,7 +43,7 @@ jobs:
       run: |
         source emsdk/emsdk_env.sh
         cd ${{ env.SOURCE_DIR }}
-        patch -p1 -i ../patches/opencv-${{ matrix.opencv-version }}-unsafe-xadd.patch
+        # patch -p1 -i ../patches/opencv-${{ matrix.opencv-version }}-unsafe-xadd.patch
         mkdir build && cd build
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
@@ -70,7 +70,7 @@ jobs:
       run: |
         source emsdk/emsdk_env.sh
         cd ${{ env.SOURCE_DIR }}
-        patch -p1 -R -i ../patches/opencv-${{ matrix.opencv-version }}-unsafe-xadd.patch
+        # patch -p1 -R -i ../patches/opencv-${{ matrix.opencv-version }}-unsafe-xadd.patch
         mkdir build-threads && cd build-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
