@@ -25,7 +25,9 @@ jobs:
     - name: arm-gnu-toolchain
       run: |
         sudo apt-get update
-        sudo apt-get install g++-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu
+        sudo apt-get install g++-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
+          libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+          libswscale-dev libgflags-dev \
 
     - uses: actions/checkout@v4
     - name: setup-opencv-source
@@ -34,57 +36,23 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
         echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
         echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-armlinux" >> $GITHUB_ENV
-    - name: build-arm-linux-gnueabi
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-arm-linux-gnueabi && cd build-arm-linux-gnueabi
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/arm-linux-gnueabi.toolchain.cmake \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
-    - name: build-arm-linux-gnueabihf
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-arm-linux-gnueabihf && cd build-arm-linux-gnueabihf
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/arm-linux-gnueabihf.toolchain.cmake \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
     - name: build-aarch64-linux-gnu
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
+            `cat ../../options.txt` ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: package
       run: |
         mkdir ${{ env.PACKAGE_NAME }}
-        mkdir ${{ env.PACKAGE_NAME }}/arm-linux-gnueabi
-        mkdir ${{ env.PACKAGE_NAME }}/arm-linux-gnueabihf
         mkdir ${{ env.PACKAGE_NAME }}/aarch64-linux-gnu
-        cp -rf ${{ env.SOURCE_DIR }}/build-arm-linux-gnueabi/install/* ${{ env.PACKAGE_NAME }}/arm-linux-gnueabi/
-        cp -rf ${{ env.SOURCE_DIR }}/build-arm-linux-gnueabihf/install/* ${{ env.PACKAGE_NAME }}/arm-linux-gnueabihf/
         cp -rf ${{ env.SOURCE_DIR }}/build-aarch64-linux-gnu/install/* ${{ env.PACKAGE_NAME }}/aarch64-linux-gnu/
         zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
     - name: set-opencv-dir
       if: matrix.opencv-version == '4.10.0'
       run: echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
-    - name: test-arm-linux-gnueabi
-      run: |
-        cd test
-        mkdir build-arm-linux-gnueabi && cd build-arm-linux-gnueabi
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/arm-linux-gnueabi.toolchain.cmake \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/arm-linux-gnueabi/${{ env.OPENCV_SUBDIR }} ..
-        cmake --build . -j $(nproc)
-    - name: test-arm-linux-gnueabihf
-      run: |
-        cd test
-        mkdir build-arm-linux-gnueabihf && cd build-arm-linux-gnueabihf
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/arm-linux-gnueabihf.toolchain.cmake \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/arm-linux-gnueabihf/${{ env.OPENCV_SUBDIR }} ..
-        cmake --build . -j $(nproc)
     - name: test-aarch64-linux-gnu
       run: |
         cd test
@@ -105,11 +73,17 @@ jobs:
         os-ubuntu:
           - { ubuntu-id: 2004, ubuntu-version: 20.04 }
           - { ubuntu-id: 2204, ubuntu-version: 22.04 }
+          - { ubuntu-id: 2404, ubuntu-version: 24.04 }
     runs-on: ubuntu-${{ matrix.os-ubuntu.ubuntu-version }}
     env:
       COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" 
     steps:
     - uses: actions/checkout@v4
+    - name: setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+          libswscale-dev libgflags-dev \
     - name: setup-opencv-source
       run: |
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
@@ -120,7 +94,7 @@ jobs:
       run: |
         cd ${{ env.SOURCE_DIR }}
         mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
     - name: package

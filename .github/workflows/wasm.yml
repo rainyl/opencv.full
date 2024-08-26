@@ -47,8 +47,8 @@ jobs:
         mkdir build && cd build
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
             `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
@@ -59,8 +59,8 @@ jobs:
         mkdir build-simd && cd build-simd
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0 -msimd128" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
             `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
@@ -72,8 +72,8 @@ jobs:
         mkdir build-threads && cd build-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
             `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
@@ -84,8 +84,8 @@ jobs:
         mkdir build-simd-threads && cd build-simd-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
             `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
@@ -107,8 +107,8 @@ jobs:
         cd test
         mkdir build && cd build
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
             -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/basic/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j $(nproc)
     - name: test-simd
@@ -116,8 +116,8 @@ jobs:
         cd test
         mkdir build-simd && cd build-simd
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0 -msimd128" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
             -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/simd/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j $(nproc)
     - name: test-threads
@@ -125,8 +125,8 @@ jobs:
         cd test
         mkdir build-threads && cd build-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
             -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/threads/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j $(nproc)
     - name: test-simd-threads
@@ -134,8 +134,8 @@ jobs:
         cd test
         mkdir build-simd-threads && cd build-simd-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
-            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
             -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/simd-threads/${{ env.OPENCV_SUBDIR }} ..
         cmake --build . -j $(nproc)
     - name: upload

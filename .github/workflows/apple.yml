@@ -11,7 +11,6 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_15.2.app/Contents/Developer
   IOS_DEPLOYMENT_TARGET: '13.0'
   MAC_DEPLOYMENT_TARGET: '11.0'
-  MAC_CATALYST_DEPLOYMENT_TARGET: '13.1'
   ENABLE_BITCODE: OFF
   ENABLE_ARC: OFF
   ENABLE_VISIBILITY: OFF
@@ -29,7 +28,7 @@ jobs:
     env:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_TOOLCHAIN_FILE=../../toolchains/ios.toolchain.cmake \
-        -DPLATFORM=OS \
+        -DPLATFORM=OS64 \
         -DDEPLOYMENT_TARGET=$IOS_DEPLOYMENT_TARGET \
         -DENABLE_BITCODE=$ENABLE_BITCODE \
         -DENABLE_ARC=$ENABLE_ARC \
@@ -50,7 +49,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="arm64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_OPENCL=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON -DWITH_OPENCL=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -113,7 +112,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86_64 && cd build-x86_64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="x86_64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -122,7 +121,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="arm64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_OPENCL=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON -DWITH_OPENCL=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -185,7 +184,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-x86_64 && cd build-x86_64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=MAC -DARCHS="x86_64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -194,7 +193,7 @@ jobs:
         cd ${{ env.SOURCE_DIR }}
         mkdir build-arm64 && cd build-arm64
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=MAC_ARM64 -DARCHS="arm64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
+            `cat ../../options.txt` -DBUILD_opencv_world=ON ..
         # workaround ar @list issue on macos
         cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
         cmake --build . --target install
@@ -236,81 +235,8 @@ jobs:
         name: ${{ env.PACKAGE_NAME }}
         path: ${{ env.PACKAGE_NAME }}.zip
 
-  mac-catalyst:
-    runs-on: macos-13
-    strategy:
-      matrix:
-        opencv-version: [4.10.0]
-    env:
-      COMMON_CMAKE_OPTIONS: |
-        -DCMAKE_TOOLCHAIN_FILE=../../toolchains/ios.toolchain.cmake \
-        -DPLATFORM=MAC_CATALYST \
-        -DDEPLOYMENT_TARGET=$MAC_CATALYST_DEPLOYMENT_TARGET \
-        -DENABLE_BITCODE=$ENABLE_BITCODE \
-        -DENABLE_ARC=$ENABLE_ARC \
-        -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
-        -DCMAKE_INSTALL_PREFIX=install \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
-    steps:
-    - uses: actions/checkout@v4
-    - name: setup-opencv-source
-      run: |
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
-        echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-mac-catalyst" >> $GITHUB_ENV
-    - name: build-x86_64
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-x86_64 && cd build-x86_64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="x86_64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
-        # workaround ar @list issue on macos
-        cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
-        cmake --build . --target install
-    - name: build-arm64
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-arm64 && cd build-arm64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="arm64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
-        # workaround ar @list issue on macos
-        cmake --build . -j 4 || { cd modules/world; $DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc ../../lib/libopencv_world.a `cat world_objects.rsp` CMakeFiles/opencv_world.dir/src/world_init.cpp.o; cd ../..; }
-        cmake --build . --target install
-    - name: package
-      run: |
-        rm -rf opencv2.framework
-        mkdir -p opencv2.framework/Versions/A/Headers
-        mkdir -p opencv2.framework/Versions/A/Resources
-        ln -s A opencv2.framework/Versions/Current
-        ln -s Versions/Current/Headers opencv2.framework/Headers
-        ln -s Versions/Current/Resources opencv2.framework/Resources
-        ln -s Versions/Current/opencv2 opencv2.framework/opencv2
-        lipo -create \
-            ${{ env.SOURCE_DIR }}/build-x86_64/install/lib/libopencv_world.a \
-            ${{ env.SOURCE_DIR }}/build-arm64/install/lib/libopencv_world.a \
-            -o opencv2.framework/Versions/A/opencv2
-        cp -r ${{ env.SOURCE_DIR }}/build-arm64/install/include/opencv4/opencv2/* opencv2.framework/Versions/A/Headers/ || :
-        cp -r ${{ env.SOURCE_DIR }}/build-arm64/install/include/opencv2/* opencv2.framework/Versions/A/Headers/ || :
-        cp ${{ env.SOURCE_DIR }}/Info.plist opencv2.framework/Versions/A/Resources/
-        rm -f ${{ env.PACKAGE_NAME }}.zip
-        zip -9 -y -r ${{ env.PACKAGE_NAME }}.zip opencv2.framework
-    - name: test
-      run: |
-        cd test
-        mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DARCHS="x86_64;arm64" \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE ..
-        cmake --build . -j 4
-    - name: upload-zip
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.PACKAGE_NAME }}
-        path: ${{ env.PACKAGE_NAME }}.zip
-
   apple:
-    needs: [macos, ios, ios-simulator, mac-catalyst]
+    needs: [macos, ios, ios-simulator]
     runs-on: macos-13
     strategy:
       matrix:
@@ -323,7 +249,6 @@ jobs:
         echo "MACOS_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-macos" >> $GITHUB_ENV
         echo "IOS_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-ios" >> $GITHUB_ENV
         echo "IOS_SIMULATOR_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-ios-simulator" >> $GITHUB_ENV
-        echo "MAC_CATALYST_PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-mac-catalyst" >> $GITHUB_ENV
         echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-apple" >> $GITHUB_ENV
     - name: download-macos-package
       uses: actions/download-artifact@v4
@@ -337,25 +262,18 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}
-    - name: download-mac-catalyst-package
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.MAC_CATALYST_PACKAGE_NAME }}
     - name: create-xcframwork
       run: |
         mkdir -p ${{ env.MACOS_PACKAGE_NAME }}
         mkdir -p ${{ env.IOS_PACKAGE_NAME }}
         mkdir -p ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}
-        mkdir -p ${{ env.MAC_CATALYST_PACKAGE_NAME }}
         unzip -q ${{ env.MACOS_PACKAGE_NAME }}.zip -d ${{ env.MACOS_PACKAGE_NAME }}
         unzip -q ${{ env.IOS_PACKAGE_NAME }}.zip -d ${{ env.IOS_PACKAGE_NAME }}
         unzip -q ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}.zip -d ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}
-        unzip -q ${{ env.MAC_CATALYST_PACKAGE_NAME }}.zip -d ${{ env.MAC_CATALYST_PACKAGE_NAME }}
         xcodebuild -create-xcframework \
             -framework ${{ env.MACOS_PACKAGE_NAME }}/opencv2.framework \
             -framework ${{ env.IOS_PACKAGE_NAME }}/opencv2.framework \
             -framework ${{ env.IOS_SIMULATOR_PACKAGE_NAME }}/opencv2.framework \
-            -framework ${{ env.MAC_CATALYST_PACKAGE_NAME }}/opencv2.framework \
             -output opencv2.xcframework
         rm -f ${{ env.PACKAGE_NAME }}.zip
         zip -9 -y -r ${{ env.PACKAGE_NAME }}.zip opencv2.xcframework
@@ -368,7 +286,7 @@ jobs:
   release:
     permissions:
       contents: write  # for softprops/action-gh-release to create a release
-    needs: [ios, ios-simulator, macos, mac-catalyst, apple]
+    needs: [ios, ios-simulator, macos, apple]
     runs-on: ubuntu-latest
     steps:
     - name: download
