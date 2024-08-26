@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.5)
 # opencv4 requires c++11
 set(CMAKE_CXX_STANDARD 11)
 
+set(OpenCV_STATIC ON)
+
 if(LINUX OR APPLE)
     find_package(Iconv REQUIRED)
 endif()
