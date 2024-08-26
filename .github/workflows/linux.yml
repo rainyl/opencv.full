@@ -34,7 +34,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
         echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-armlinux" >> $GITHUB_ENV
+        echo "PACKAGE_NAME=opencv-armlinux" >> $GITHUB_ENV
     - name: build-aarch64-linux-gnu
       run: |
         cd ${{ env.SOURCE_DIR }}
@@ -70,7 +70,6 @@ jobs:
       matrix:
         opencv-version: [4.10.0]
         os-ubuntu:
-          - { ubuntu-id: 2004, ubuntu-version: 20.04 }
           - { ubuntu-id: 2204, ubuntu-version: 22.04 }
           - { ubuntu-id: 2404, ubuntu-version: 24.04 }
     runs-on: ubuntu-${{ matrix.os-ubuntu.ubuntu-version }}
@@ -88,7 +87,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
         echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-ubuntu-${{ matrix.os-ubuntu.ubuntu-id }}" >> $GITHUB_ENV
+        echo "PACKAGE_NAME=opencv-ubuntu-${{ matrix.os-ubuntu.ubuntu-id }}" >> $GITHUB_ENV
     - name: build
       run: |
         cd ${{ env.SOURCE_DIR }}

@@ -74,8 +74,8 @@ jobs:
         mkdir build-threads && cd build-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
-            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
             `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_VULKAN=OFF \
             -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)
@@ -87,8 +87,8 @@ jobs:
         mkdir build-simd-threads && cd build-simd-threads
         cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
-            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
             `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_VULKAN=OFF \
             -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
         cmake --build . -j $(nproc)

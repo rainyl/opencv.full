@@ -28,7 +28,7 @@ jobs:
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
         git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
         echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $env:GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-windows-${{ matrix.os-compiler.msvc-version }}" >> $env:GITHUB_ENV
+        echo "PACKAGE_NAME=opencv-windows-${{ matrix.os-compiler.msvc-version }}" >> $env:GITHUB_ENV
     - name: build-x64
       run: |
         cd ${{ env.SOURCE_DIR }}
