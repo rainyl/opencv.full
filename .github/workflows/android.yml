@@ -75,12 +75,12 @@ jobs:
         path: artifacts
     - name: package
       run: |
+        tree -L 3 artifacts
         cd artifacts
         mkdir opencv-android
-        for f in *.zip; do
+        for f in */*.zip; do
           unzip -o $f -d opencv-android
         done
-        tree -L 3 opencv-android
 
     - name: create-release
       uses: softprops/action-gh-release@v2
