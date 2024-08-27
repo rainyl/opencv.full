@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         opencv-version: [4.10.0]
+        abi: [armeabi-v7a, arm64-v8a, x86_64]
     env:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_POLICY_DEFAULT_CMP0057=NEW \
@@ -24,67 +25,36 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
         -DANDROID_STL=c++_static \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
     steps:
     - uses: actions/checkout@v4
     - name: ndk-fix-debug
       run: sed -i -e '/^  -g$/d' $ANDROID_NDK_LATEST_HOME/build/cmake/android-legacy.toolchain.cmake
     - name: setup-opencv-source
       run: |
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
-        echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-android" >> $GITHUB_ENV
-    - name: build-armeabi-v7a
+        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+        echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+        echo "PACKAGE_NAME=opencv-android-${{ matrix.abi }}" >> $GITHUB_ENV
+    - name: build
       run: |
         cd ${{ env.SOURCE_DIR }}
-        mkdir build-armeabi-v7a && cd build-armeabi-v7a
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+        mkdir build && cd build
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_ARM_NEON=ON \
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
         cmake --build . -j $(nproc)
         cmake --build . --target install
-    - name: build-arm64-v8a
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-arm64-v8a && cd build-arm64-v8a
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="arm64-v8a" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON -DOPENCV_EXTRA_FLAGS="-mno-outline-atomics" ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
-    - name: build-x86_64
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-x86_64 && cd build-x86_64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="x86_64" \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
+
     - name: package
       run: |
         mkdir ${{ env.PACKAGE_NAME }}
-        cp -rf ${{ env.SOURCE_DIR }}/build-x86_64/install/* ${{ env.PACKAGE_NAME }}/
-        cp -rf ${{ env.SOURCE_DIR }}/build-armeabi-v7a/install/* ${{ env.PACKAGE_NAME }}/
-        cp -rf ${{ env.SOURCE_DIR }}/build-arm64-v8a/install/* ${{ env.PACKAGE_NAME }}/
+        cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
         zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
-    - name: test-armeabi-v7a
+    - name: test
       run: |
         cd test
-        mkdir build-armeabi-v7a && cd build-armeabi-v7a
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/sdk/native/jni ..
-        cmake --build . -j $(nproc)
-    - name: test-arm64-v8a
-      run: |
-        cd test
-        mkdir build-arm64-v8a && cd build-arm64-v8a
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="arm64-v8a" \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/sdk/native/jni ..
-        cmake --build . -j $(nproc)
-    - name: test-x86_64
-      run: |
-        cd test
-        mkdir build-x86_64 && cd build-x86_64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="x86_64" \
+        mkdir build && cd build
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_ARM_NEON=ON \
             -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/sdk/native/jni ..
         cmake --build . -j $(nproc)
     - name: upload
@@ -103,6 +73,14 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: artifacts
+    - name: package
+      run: |
+        cd artifacts
+        mkdir opencv-android
+        for f in *.zip; do
+          unzip -o $f -d opencv-android
+        done
+        tree -L 3 opencv-android
 
     - name: create-release
       uses: softprops/action-gh-release@v2
