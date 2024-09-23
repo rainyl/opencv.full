@@ -110,7 +110,8 @@ jobs:
         run: |
           cd test
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/x64/${{ env.OPENCV_SUBDIR }} ..
           cmake --build . -j $(nproc)
       - name: upload
         uses: actions/upload-artifact@v4
