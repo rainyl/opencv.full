@@ -2,12 +2,9 @@ name: android
 on:
   push:
     tags:
-      - '*'
+      - "*"
   pull_request:
     branches: ["main"]
-
-permissions:
-  contents: read
 
 jobs:
   android:
@@ -27,66 +24,44 @@ jobs:
         -DANDROID_STL=c++_static \
         -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
     steps:
-    - uses: actions/checkout@v4
-    - name: ndk-fix-debug
-      run: sed -i -e '/^  -g$/d' $ANDROID_NDK_LATEST_HOME/build/cmake/android-legacy.toolchain.cmake
-    - name: setup-opencv-source
-      run: |
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-        echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-android-${{ matrix.abi }}" >> $GITHUB_ENV
-    - name: build
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_ARM_NEON=ON \
-            `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-android-${{ matrix.abi }}" >> $GITHUB_ENV
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_ARM_NEON=ON \
+              `cat ../../options.txt` -DBUILD_opencv_world=OFF ..
+          cmake --build . -j $(nproc)
+          cmake --build . --target install
 
-    - name: package
-      run: |
-        mkdir ${{ env.PACKAGE_NAME }}
-        cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-        zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
-    - name: test
-      run: |
-        cd test
-        mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_ARM_NEON=ON \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/sdk/native/jni ..
-        cmake --build . -j $(nproc)
-    - name: upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.PACKAGE_NAME }}
-        path: ${{ env.PACKAGE_NAME }}.zip
-
-  release:
-    permissions:
-      contents: write  # for softprops/action-gh-release to create a release
-    needs: [android]
-    runs-on: ubuntu-latest
-    steps:
-    - name: download
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-    - name: package
-      run: |
-        tree -L 3 artifacts
-        cd artifacts
-        mkdir opencv-android
-        for f in */*.zip; do
-          unzip -o $f -d opencv-android
-        done
-
-    - name: create-release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        draft: true
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
-        files: artifacts/*/*.zip
+      - name: package
+        run: |
+          mkdir -p ${{ env.PACKAGE_NAME }}/
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
+          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}
+      - name: test
+        run: |
+          cd test
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_ARM_NEON=ON \
+              -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/sdk/native/jni ..
+          cmake --build . -j $(nproc)
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz

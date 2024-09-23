@@ -2,12 +2,9 @@ name: linux
 on:
   push:
     tags:
-      - '*'
-  # pull_request:
-  #   branches: ["main"]
-
-permissions:
-  contents: read
+      - "*"
+  pull_request:
+    branches: ["main"]
 
 jobs:
   armlinux:
@@ -19,51 +16,57 @@ jobs:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
     steps:
-    - name: arm-gnu-toolchain
-      run: |
-        sudo apt-get update
-        sudo apt-get install g++-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
-          libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
-          libswscale-dev libgflags-dev \
+      - name: arm-gnu-toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install g++-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
+            libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+            libswscale-dev libgflags-dev \
 
-    - uses: actions/checkout@v4
-    - name: setup-opencv-source
-      run: |
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
-        echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-armlinux" >> $GITHUB_ENV
-    - name: build-aarch64-linux-gnu
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
-            `cat ../../options.txt` ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
-    - name: package
-      run: |
-        mkdir ${{ env.PACKAGE_NAME }}
-        mkdir ${{ env.PACKAGE_NAME }}/aarch64-linux-gnu
-        cp -rf ${{ env.SOURCE_DIR }}/build-aarch64-linux-gnu/install/* ${{ env.PACKAGE_NAME }}/aarch64-linux-gnu/
-        zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
-    - name: set-opencv-dir
-      if: matrix.opencv-version == '4.10.0'
-      run: echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
-    - name: test-aarch64-linux-gnu
-      run: |
-        cd test
-        mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
-            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/aarch64-linux-gnu/${{ env.OPENCV_SUBDIR }} ..
-        cmake --build . -j $(nproc)
-    - name: upload-zip
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.PACKAGE_NAME }}
-        path: ${{ env.PACKAGE_NAME }}.zip
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-linux-arm" >> $GITHUB_ENV
+          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+      - name: build-aarch64-linux-gnu
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
+              `cat ../../options.txt` ..
+          cmake --build . -j $(nproc)
+          cmake --build . --target install
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          mkdir ${{ env.PACKAGE_NAME }}/aarch64-linux-gnu
+          cp -rf ${{ env.SOURCE_DIR }}/build-aarch64-linux-gnu/install/* ${{ env.PACKAGE_NAME }}/aarch64-linux-gnu/
+          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}
+      - name: test-aarch64-linux-gnu
+        run: |
+          cd test
+          mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
+              -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/aarch64-linux-gnu/${{ env.OPENCV_SUBDIR }} ..
+          cmake --build . -j $(nproc)
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
 
   ubuntu:
     strategy:
@@ -74,65 +77,71 @@ jobs:
           - { ubuntu-id: 2404, ubuntu-version: 24.04 }
     runs-on: ubuntu-${{ matrix.os-ubuntu.ubuntu-version }}
     env:
-      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" 
+      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules"
     steps:
-    - uses: actions/checkout@v4
-    - name: setup
-      run: |
-        sudo apt-get update
-        sudo apt-get install libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
-          libswscale-dev libgflags-dev \
-    - name: setup-opencv-source
-      run: |
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
-        echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
-        echo "PACKAGE_NAME=opencv-ubuntu-${{ matrix.os-ubuntu.ubuntu-id }}" >> $GITHUB_ENV
-    - name: build
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` ..
-        cmake --build . -j $(nproc)
-        cmake --build . --target install
-    - name: package
-      run: |
-        rm -rf ${{ env.PACKAGE_NAME }}
-        mkdir -p ${{ env.PACKAGE_NAME }}
-        cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-        rm -f ${{ env.PACKAGE_NAME }}.zip
-        zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
-    - name: set-opencv-dir
-      if: matrix.opencv-version == '4.10.0'
-      run: echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
-    - name: test
-      run: |
-        cd test
-        mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
-        cmake --build . -j $(nproc)
-    - name: upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.PACKAGE_NAME }}
-        path: ${{ env.PACKAGE_NAME }}.zip
+      - uses: actions/checkout@v4
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+            libswscale-dev libgflags-dev \
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=opencv-ubuntu-${{ matrix.os-ubuntu.ubuntu-id }}" >> $GITHUB_ENV
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` ..
+          cmake --build . -j $(nproc)
+          cmake --build . --target install
+      - name: package
+        run: |
+          mkdir -p ${{ env.PACKAGE_NAME }}/x64
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/x64
+          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}
+      - name: set-opencv-dir
+        if: matrix.opencv-version == '4.10.0'
+        run: echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+      - name: test
+        run: |
+          cd test
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+          cmake --build . -j $(nproc)
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
 
-  release:
-    permissions:
-      contents: write  # for softprops/action-gh-release to create a release
-    needs: [armlinux, ubuntu]
-    runs-on: ubuntu-latest
-    steps:
-    - name: download
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
+  # release:
+  #   permissions:
+  #     contents: write  # for softprops/action-gh-release to create a release
+  #   needs: [armlinux, ubuntu]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: download
+  #     uses: actions/download-artifact@v4
+  #     with:
+  #       path: artifacts
 
-    - name: create-release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        draft: true
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
-        files: artifacts/*/*.zip
+  #   - name: create-release
+  #     uses: softprops/action-gh-release@v2
+  #     if: startsWith(github.ref, 'refs/tags/')
+  #     with:
+  #       draft: true
+  #       prerelease: false
+  #       token: ${{ secrets.GITHUB_TOKEN }}
+  #       files: artifacts/*/*.tar.gz
