@@ -79,7 +79,7 @@ function(_ffmpeg_find component headername)
         "${component}"
         PATHS
         "${FFMPEG_ROOT}/lib"
-        "${FFMPEG_ROOT}/lib/${ARCH}"
+        "${FFMPEG_ROOT}/lib/${FFMPEG_ARCH}"
         ~/Library/Frameworks
         /Library/Frameworks
         /usr/local/lib
@@ -92,7 +92,7 @@ function(_ffmpeg_find component headername)
         /opt/lib
         /usr/freeware/lib64
         "${FFMPEG_ROOT}/bin"
-        "${FFMPEG_ROOT}/bin/${ARCH}"
+        "${FFMPEG_ROOT}/bin/${FFMPEG_ARCH}"
         DOC "FFMPEG's ${component} library")
     mark_as_advanced("FFMPEG_${component}_LIBRARY")
 
