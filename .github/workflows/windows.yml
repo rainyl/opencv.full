@@ -16,6 +16,10 @@ jobs:
               arch: x64,
               toolset-version: v142,
             }
+          - {
+              arch: arm64,
+              toolset-version: v142,
+            }
           # - {
           #     msvc-version: vs2022,
           #     windows-version: 2022,
