@@ -16,29 +16,39 @@ jobs:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules"
     steps:
       - name: arm-gnu-toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install g++-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
-            libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
-            libswscale-dev libgflags-dev \
+          sudo apt-get install g++-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu
 
       - uses: actions/checkout@v4
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
           echo "PACKAGE_NAME=libopencv-linux-arm" >> $GITHUB_ENV
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-default.tar.xz
+          mkdir -p ffmpeg
+          tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
       - name: build-aarch64-linux-gnu
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build-aarch64-linux-gnu && cd build-aarch64-linux-gnu
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DCMAKE_TOOLCHAIN_FILE=../../toolchains/aarch64-linux-gnu.toolchain.cmake \
-              `cat ../../options.txt` ..
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake \
+            `cat ${{ github.workspace }}/options.txt` \
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
+            -DOPENCV_FFMPEG_USE_FIND_PACKAGE=ON \
+            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+            -DBUILD_opencv_world=OFF \
+            -DFFMPEG_ARCH=arm64 ..
           cmake --build . -j $(nproc)
           cmake --build . --target install
       - name: package
@@ -77,25 +87,40 @@ jobs:
           - { ubuntu-id: 2404, ubuntu-version: 24.04 }
     runs-on: ubuntu-${{ matrix.os-ubuntu.ubuntu-version }}
     env:
-      COMMON_CMAKE_OPTIONS: -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules"
+      COMMON_CMAKE_OPTIONS: |
+        -DCMAKE_INSTALL_PREFIX=install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules"
     steps:
       - uses: actions/checkout@v4
       - name: setup
         run: |
           sudo apt-get update
-          sudo apt-get install libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
-            libswscale-dev libgflags-dev \
+          sudo apt-get install libgtk-3-dev
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
           echo "PACKAGE_NAME=opencv-ubuntu-${{ matrix.os-ubuntu.ubuntu-id }}" >> $GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-default.tar.xz
+          mkdir -p ffmpeg
+          tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` ..
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake \
+            `cat ${{ github.workspace }}/options.txt` \
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
+            -DOPENCV_FFMPEG_USE_FIND_PACKAGE=ON \
+            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+            -DBUILD_opencv_world=OFF \
+            -DFFMPEG_ARCH=amd64 ..
           cmake --build . -j $(nproc)
           cmake --build . --target install
       - name: package

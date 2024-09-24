@@ -1,5 +1,8 @@
 build*/
 test/
+ffmpeg*
+opencv/
+opencv_contrib/
 # Prerequisites
 *.d
 .vscode

@@ -38,7 +38,7 @@ jobs:
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
           echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=opencv-ios-arm64" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-ios-arm64" >> $GITHUB_ENV
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
       - name: build
         run: |
