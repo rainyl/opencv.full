@@ -69,6 +69,7 @@ jobs:
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
       - name: build
         run: |
+          cd ${{ env.SOURCE_DIR }}/build
           cmake --build . --config Release --target install -j 4
       - name: package
         run: |
