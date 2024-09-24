@@ -44,7 +44,7 @@ jobs:
       - name: set toolchain
         run: |
           if [ "${{ matrix.os.arch }}" = "arm64" ]; then
-            echo "TOOLCHAIN_FILE='-DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}/opencv_contrib/modules'" >> "$GITHUB_ENV"
+            echo "TOOLCHAIN_FILE='-DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake'" >> "$GITHUB_ENV"
           else
             echo "TOOLCHAIN_FILE=" >> "$GITHUB_ENV"
           fi
