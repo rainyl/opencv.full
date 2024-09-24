@@ -28,8 +28,8 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-android-${{ matrix.abi }}" >> $GITHUB_ENV
+          echo "SOURCE_DIR=opencv" >> $env:GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-android-${{ matrix.abi }}" >> $env:GITHUB_ENV
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/android/ffmpeg-6.1-android-lite.tar.xz
@@ -37,7 +37,7 @@ jobs:
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -48,6 +48,7 @@ jobs:
             `cat ${{ github.workspace }}/options.txt` \
             -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
             -DBUILD_opencv_world=OFF \
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
             -DFFMPEG_ARCH="${{ matrix.abi }}" \
             -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
             ..

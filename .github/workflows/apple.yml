@@ -37,9 +37,9 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-ios-arm64" >> $GITHUB_ENV
-          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-ios-arm64" >> $env:GITHUB_ENV
+          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $env:GITHUB_ENV
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
@@ -47,7 +47,7 @@ jobs:
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -114,9 +114,9 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-iossimulator-${{ matrix.platform.arch }}" >> $GITHUB_ENV
-          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-iossimulator-${{ matrix.platform.arch }}" >> $env:GITHUB_ENV
+          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $env:GITHUB_ENV
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
@@ -124,7 +124,7 @@ jobs:
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -192,9 +192,9 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-macos-${{ matrix.osname.arch }}" >> $GITHUB_ENV
-          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-macos-${{ matrix.osname.arch }}" >> $env:GITHUB_ENV
+          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $env:GITHUB_ENV
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-default.tar.xz
@@ -202,7 +202,7 @@ jobs:
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}

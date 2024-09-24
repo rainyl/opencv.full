@@ -43,7 +43,7 @@ jobs:
           Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite ffmpeg
           mkdir ${{ github.workspace }}/ffmpeg/cmake -Force
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
