@@ -36,14 +36,14 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-linux-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
-          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $env:GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=libopencv-linux-${{ matrix.os.arch }}" >> "$GITHUB_ENV"
+          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
 
           if [ "$arch" = "arm64" ]; then
-            echo "TOOLCHAIN_FILE='-DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}/opencv_contrib/modules'" >> $env:GITHUB_ENV
+            echo "TOOLCHAIN_FILE='-DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}/opencv_contrib/modules'" >> "$GITHUB_ENV"
           else
-            echo "TOOLCHAIN_FILE=" >> $env:GITHUB_ENV
+            echo "TOOLCHAIN_FILE=" >> "$GITHUB_ENV"
           fi
 
           echo ${{ env.TOOLCHAIN_FILE }}
@@ -54,7 +54,7 @@ jobs:
           tar xf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}

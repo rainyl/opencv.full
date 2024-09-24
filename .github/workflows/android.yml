@@ -28,8 +28,8 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $env:GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-android-${{ matrix.abi }}" >> $env:GITHUB_ENV
+          echo "SOURCE_DIR=opencv" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=libopencv-android-${{ matrix.abi }}" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/android/ffmpeg-6.1-android-lite.tar.xz
@@ -37,9 +37,10 @@ jobs:
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
       - name: build
         run: |
+          echo "$GITHUB_ENV"
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} \

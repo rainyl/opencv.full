@@ -33,8 +33,8 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $env:GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
+          echo "SOURCE_DIR=opencv" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
           choco install wget --no-progress
@@ -43,7 +43,7 @@ jobs:
           Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite ffmpeg
           mkdir ${{ github.workspace }}/ffmpeg/cmake -Force
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
