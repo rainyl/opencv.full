@@ -42,7 +42,7 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
       - name: setup ffmpeg
         run: |
-          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
           mkdir -p ffmpeg
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
@@ -119,7 +119,7 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
       - name: setup ffmpeg
         run: |
-          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
           mkdir -p ffmpeg
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
@@ -197,7 +197,7 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
       - name: setup ffmpeg
         run: |
-          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-default.tar.xz
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-default.tar.xz
           mkdir -p ffmpeg
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake

@@ -32,7 +32,7 @@ jobs:
           echo "PACKAGE_NAME=libopencv-android-${{ matrix.abi }}" >> $GITHUB_ENV
       - name: setup ffmpeg
         run: |
-          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-default.tar.xz
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-default.tar.xz
           mkdir -p ffmpeg
           tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
           mkdir -p ${{ github.workspace }}/ffmpeg/cmake
@@ -58,6 +58,8 @@ jobs:
         run: |
           mkdir -p ${{ env.PACKAGE_NAME }}/
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
+
+          tree -L 3 ${{ env.FFMPEG_ROOT }}
 
           mkdir -p ${{ env.PACKAGE_NAME }}/ffmpeg
           cp -rf ${{ env.FFMPEG_ROOT }}/include ${{ env.PACKAGE_NAME }}/ffmpeg/

@@ -39,7 +39,7 @@ jobs:
       - name: setup ffmpeg
         run: |
           choco install wget --no-progress
-          wget https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
+          wget -q https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite ffmpeg
           mkdir ${{ github.workspace }}/ffmpeg/cmake -Force
