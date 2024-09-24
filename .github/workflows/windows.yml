@@ -32,14 +32,14 @@ jobs:
         -DCMAKE_SYSTEM_NAME=Windows `
         -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.os.arch }} `
         $(type ${{ github.workspace }}/options.txt) `
-        -DFFMPEG_ARCH=${{ matrix.os.arch }}
+        -DFFMPEG_ARCH=${{ matrix.os.arch }} `
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> "$GITHUB_ENV"
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> "$GITHUB_ENV"
           echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
