@@ -46,7 +46,16 @@ if(NOT DEFINED FFMPEG_ARCH)
     string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} FFMPEG_ARCH)
 endif()
 
-message(STATUS "FFMPEG_ROOT: ${FFMPEG_ROOT}")
+message(STATUS "FFMPEG:")
+message(STATUS "    FFMPEG_ROOT: ${FFMPEG_ROOT}")
+message(STATUS "    FFMPEG_ARCH: ${FFMPEG_ARCH}")
+
+# https://stackoverflow.com/a/46057018/18539998
+if(ANDROID)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+endif()
 
 function(_ffmpeg_find component headername)
     find_path("FFMPEG_${component}_INCLUDE_DIR"
@@ -65,7 +74,8 @@ function(_ffmpeg_find component headername)
         /usr/freeware/include
         PATH_SUFFIXES
         ffmpeg
-        DOC "FFMPEG's ${component} include directory")
+        DOC "FFMPEG's ${component} include directory"
+    )
     mark_as_advanced("FFMPEG_${component}_INCLUDE_DIR")
 
     # On Windows, static FFMPEG is sometimes built as `lib<name>.a`.
@@ -93,7 +103,8 @@ function(_ffmpeg_find component headername)
         /usr/freeware/lib64
         "${FFMPEG_ROOT}/bin"
         "${FFMPEG_ROOT}/bin/${FFMPEG_ARCH}"
-        DOC "FFMPEG's ${component} library")
+        DOC "FFMPEG's ${component} library"
+    )
     mark_as_advanced("FFMPEG_${component}_LIBRARY")
 
     if(FFMPEG_${component}_LIBRARY AND FFMPEG_${component}_INCLUDE_DIR)
@@ -114,11 +125,11 @@ function(_ffmpeg_find component headername)
                 set_target_properties("FFMPEG::${component}" PROPERTIES
                     IMPORTED_LOCATION "${FFMPEG_${component}_LIBRARY}"
                     INTERFACE_INCLUDE_DIRECTORIES "${FFMPEG_${component}_INCLUDE_DIR}"
-                    IMPORTED_LINK_INTERFACE_LIBRARIES "${_deps_link}")
+                    IMPORTED_LINK_INTERFACE_LIBRARIES "${_deps_link}"
+                )
             endif()
 
-            set("FFMPEG_${component}_FOUND" 1
-                PARENT_SCOPE)
+            set("FFMPEG_${component}_FOUND" 1 PARENT_SCOPE)
 
             # get version
             if(EXISTS "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version.h")
@@ -180,26 +191,20 @@ function(_ffmpeg_find component headername)
 
             set("FFMPEG_${component}_NOT_FOUND_MESSAGE"
                 "Could not find the ${what} for ${component}."
-                PARENT_SCOPE)
+                PARENT_SCOPE
+            )
         endif()
     endif()
 endfunction()
 
 _ffmpeg_find(avutil avutil.h)
-_ffmpeg_find(avresample avresample.h
-    avutil)
-_ffmpeg_find(swresample swresample.h
-    avutil)
-_ffmpeg_find(swscale swscale.h
-    avutil)
-_ffmpeg_find(avcodec avcodec.h
-    avutil)
-_ffmpeg_find(avformat avformat.h
-    avcodec avutil)
-_ffmpeg_find(avfilter avfilter.h
-    avutil)
-_ffmpeg_find(avdevice avdevice.h
-    avformat avutil)
+_ffmpeg_find(avresample avresample.h avutil)
+_ffmpeg_find(swresample swresample.h avutil)
+_ffmpeg_find(swscale swscale.h avutil)
+_ffmpeg_find(avcodec avcodec.h avutil)
+_ffmpeg_find(avformat avformat.h avcodec avutil)
+_ffmpeg_find(avfilter avfilter.h avutil)
+_ffmpeg_find(avdevice avdevice.h avformat avutil)
 
 if(NOT FFMPEG_FIND_COMPONENTS)
     set(FFMPEG_FIND_COMPONENTS avutil swresample swscale avcodec avformat avfilter avdevice) # optional avresample
@@ -210,7 +215,8 @@ if(TARGET FFMPEG::avutil)
 
     if(EXISTS "${_ffmpeg_version_header_path}")
         file(STRINGS "${_ffmpeg_version_header_path}" _ffmpeg_version
-            REGEX "FFMPEG_VERSION")
+            REGEX "FFMPEG_VERSION"
+        )
         string(REGEX REPLACE ".*\"n?\(.*\)\"" "\\1" FFMPEG_VERSION "${_ffmpeg_version}")
         unset(_ffmpeg_version)
     else()
@@ -239,7 +245,8 @@ foreach(_ffmpeg_component IN LISTS FFMPEG_FIND_COMPONENTS)
         if(FFMEG_FIND_REQUIRED_${_ffmpeg_component})
             list(APPEND _ffmpeg_required_vars
                 "FFMPEG_${_ffmpeg_required_vars}_INCLUDE_DIRS"
-                "FFMPEG_${_ffmpeg_required_vars}_LIBRARIES")
+                "FFMPEG_${_ffmpeg_required_vars}_LIBRARIES"
+            )
         endif()
     endif()
 endforeach()
@@ -254,5 +261,6 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FFMPEG
     REQUIRED_VARS FFMPEG_INCLUDE_DIRS FFMPEG_LIBRARIES ${_ffmpeg_required_vars}
     VERSION_VAR FFMPEG_VERSION
-    HANDLE_COMPONENTS)
+    HANDLE_COMPONENTS
+)
 unset(_ffmpeg_required_vars)

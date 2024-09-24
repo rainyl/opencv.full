@@ -21,7 +21,11 @@ jobs:
         -DANDROID_PLATFORM=android-24 \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DANDROID_STL=c++_static \
+        -DANDROID_STL=c++_static \ \
+        -DANDROID_ABI="${{ matrix.abi }}" \
+        -DANDROID_ARM_NEON=ON \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
@@ -43,16 +47,10 @@ jobs:
           echo "$GITHUB_ENV"
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DANDROID_ABI="${{ matrix.abi }}" \
-            -DANDROID_ARM_NEON=ON \
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             `cat ${{ github.workspace }}/options.txt` \
-            -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
-            -DBUILD_opencv_world=OFF \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
-            -DFFMPEG_ARCH="${{ matrix.abi }}" \
-            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
-            ..
+            -DFFMPEG_ARCH="${{ matrix.abi }}"
           cmake --build . -j $(nproc)
           cmake --build . --target install
 

@@ -27,6 +27,12 @@ jobs:
         -T ${{ matrix.os.toolset-version }},host=x64 `
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
+        -A ${{ matrix.os.arch }} `
+        -DCMAKE_SYSTEM_NAME=Windows `
+        -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.os.arch }} `
+        $(type ${{ github.workspace }}/options.txt) `
+        -DFFMPEG_ARCH=${{ matrix.os.arch }}
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
@@ -44,22 +50,26 @@ jobs:
           mkdir ${{ github.workspace }}/ffmpeg/cmake -Force
           cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
           echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
-      - name: build
+      - name: make directory
         run: |
           cd ${{ env.SOURCE_DIR }}
-          mkdir build; cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A ${{ matrix.os.arch }} `
-            -DCMAKE_SYSTEM_NAME=Windows `
-            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.os.arch }} `
-            $(type ${{ github.workspace }}/options.txt) `
-            -DBUILD_opencv_world=OFF `
+          mkdir build
+      - name: generate arm64
+        if: ${{ matrix.os.arch }} == 'arm64'
+        run: |
+          cd ${{ env.SOURCE_DIR }}/build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `
-            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" `
-            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
-            -DFFMPEG_ARCH=${{ matrix.os.arch }} `
-            ..
-          cmake --build . --config Release -j 4
-          cmake --build . --config Release --target install
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
+      - name: generate x64
+        if: ${{ matrix.os.arch }} == 'x64'
+        run: |
+          cd ${{ env.SOURCE_DIR }}/build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
+      - name: build
+        run: |
+          cmake --build . --config Release --target install -j 4
       - name: package
         run: |
           mkdir ${{ env.PACKAGE_NAME }}

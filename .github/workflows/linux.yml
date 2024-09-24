@@ -19,6 +19,8 @@ jobs:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
       - name: setup arm64
         if: matrix.os.arch == 'arm64'
@@ -39,14 +41,13 @@ jobs:
           echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> "$GITHUB_ENV"
           echo "PACKAGE_NAME=libopencv-linux-${{ matrix.os.arch }}" >> "$GITHUB_ENV"
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
-
-          if [ "$arch" = "arm64" ]; then
+      - name: set toolchain
+        run: |
+          if [ "${{ matrix.os.arch }}" = "arm64" ]; then
             echo "TOOLCHAIN_FILE='-DOPENCV_EXTRA_MODULES_PATH=${{ github.workspace }}/opencv_contrib/modules'" >> "$GITHUB_ENV"
           else
             echo "TOOLCHAIN_FILE=" >> "$GITHUB_ENV"
           fi
-
-          echo ${{ env.TOOLCHAIN_FILE }}
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-default.tar.xz
@@ -59,15 +60,11 @@ jobs:
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             ${{ env.TOOLCHAIN_FILE }} \
             `cat ${{ github.workspace }}/options.txt` \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
-            -DOPENCV_FFMPEG_USE_FIND_PACKAGE=ON \
-            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
-            -DBUILD_opencv_world=OFF \
-            -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }} ..
+            -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
           cmake --build . -j $(nproc)
           cmake --build . --target install
       - name: package
