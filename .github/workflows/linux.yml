@@ -16,7 +16,7 @@ jobs:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules"
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
     steps:
       - name: arm-gnu-toolchain
         run: |
@@ -90,7 +90,7 @@ jobs:
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules"
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
     steps:
       - uses: actions/checkout@v4
       - name: setup
