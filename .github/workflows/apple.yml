@@ -9,8 +9,8 @@ on:
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_15.2.app/Contents/Developer
-  IOS_DEPLOYMENT_TARGET: "13.0"
-  MAC_DEPLOYMENT_TARGET: "11.0"
+  IOS_DEPLOYMENT_TARGET: "11.0"
+  MAC_DEPLOYMENT_TARGET: "10.15"
   ENABLE_BITCODE: OFF
   ENABLE_ARC: OFF
   ENABLE_VISIBILITY: OFF
@@ -23,43 +23,58 @@ jobs:
         opencv-version: [4.10.0]
     env:
       COMMON_CMAKE_OPTIONS: |
-        -DCMAKE_TOOLCHAIN_FILE=../../toolchains/ios.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/ios.toolchain.cmake \
         -DDEPLOYMENT_TARGET=$IOS_DEPLOYMENT_TARGET \
         -DENABLE_BITCODE=$ENABLE_BITCODE \
         -DENABLE_ARC=$ENABLE_ARC \
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
           echo "PACKAGE_NAME=libopencv-ios-arm64" >> $GITHUB_ENV
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
+          mkdir -p ffmpeg
+          tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+          mkdir -p ${{ github.workspace }}/ffmpeg/cmake
+          cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` \
             -DPLATFORM=OS64 \
-            -DWITH_OPENCL=OFF -DWITH_OPENCL_SVM=OFF ..
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
+            -DWITH_TIFF=OFF \
+            -DWITH_OPENJPEG=OFF \
+            -DWITH_OPENCL=OFF \
+            -DWITH_OPENCL_SVM=OFF ..
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
         run: |
           mkdir -p ${{ env.PACKAGE_NAME }}/
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}/
+
+          cp -rf ${{ env.FFMPEG_ROOT }} ${{ env.PACKAGE_NAME }}/ffmpeg
+
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
         run: |
           cd test
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=OS64 \
-              -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+              -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
           cmake --build . -j 4
       - name: upload
         uses: actions/upload-artifact@v4
@@ -85,30 +100,42 @@ jobs:
           - { arch: arm64, name: SIMULATORARM64 }
     env:
       COMMON_CMAKE_OPTIONS: |
-        -DCMAKE_TOOLCHAIN_FILE=../../toolchains/ios.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/ios.toolchain.cmake \
         -DDEPLOYMENT_TARGET=$IOS_DEPLOYMENT_TARGET \
         -DENABLE_BITCODE=$ENABLE_BITCODE \
         -DENABLE_ARC=$ENABLE_ARC \
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-ios-simulator-${{ matrix.platform.arch }}" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-iossimulator-${{ matrix.platform.arch }}" >> $GITHUB_ENV
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
+          mkdir -p ffmpeg
+          tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+          mkdir -p ${{ github.workspace }}/ffmpeg/cmake
+          cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} `cat ../../options.txt` \
             -DPLATFORM=${{ matrix.platform.name }} \
-            -DWITH_OPENCL=OFF -DWITH_OPENCL_SVM=OFF \
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
+            -DWITH_TIFF=OFF \
+            -DWITH_OPENJPEG=OFF \
+            -DWITH_OPENCL=OFF \
+            -DWITH_OPENCL_SVM=OFF \
             -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
           cmake --build . -j 4
           cmake --build . --target install
@@ -116,13 +143,16 @@ jobs:
         run: |
           mkdir -p ${{ env.PACKAGE_NAME }}/
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}/
+
+          cp -rf ${{ env.FFMPEG_ROOT }} ${{ env.PACKAGE_NAME }}/ffmpeg
+
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
         run: |
           cd test
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=${{ matrix.platform.name }} \
-              -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+              -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
           cmake --build . -j 4
       - name: upload
         uses: actions/upload-artifact@v4
@@ -148,42 +178,57 @@ jobs:
     runs-on: ${{ matrix.osname.os }}
     env:
       COMMON_CMAKE_OPTIONS: |
-        -DCMAKE_TOOLCHAIN_FILE=../../toolchains/ios.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/ios.toolchain.cmake \
         -DDEPLOYMENT_TARGET=$MAC_DEPLOYMENT_TARGET \
         -DENABLE_BITCODE=OFF \
         -DENABLE_ARC=$ENABLE_ARC \
         -DENABLE_VISIBILITY=$ENABLE_VISIBILITY \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=opencv" >> $GITHUB_ENV
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $GITHUB_ENV
           echo "PACKAGE_NAME=libopencv-macos-${{ matrix.osname.arch }}" >> $GITHUB_ENV
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          wget -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-default.tar.xz
+          mkdir -p ffmpeg
+          tar xvf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+          mkdir -p ${{ github.workspace }}/ffmpeg/cmake
+          cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=${{ matrix.osname.platform }} \
-              `cat ../../options.txt` ..
+            `cat ../../options.txt` \
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
+            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+            ..
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
         run: |
           mkdir -p ${{ env.PACKAGE_NAME }}/
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}/
+
+          cp -rf ${{ env.FFMPEG_ROOT }} ${{ env.PACKAGE_NAME }}/ffmpeg
+
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
         run: |
           cd test
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -DPLATFORM=${{ matrix.osname.platform }} \
-              -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
+            ..
           cmake --build . -j 4
       - name: upload
         uses: actions/upload-artifact@v4

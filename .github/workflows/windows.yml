@@ -2,7 +2,7 @@ name: windows
 on:
   push:
     tags:
-      - '*'
+      - "*"
   pull_request:
     branches: ["main"]
 
@@ -11,79 +11,80 @@ jobs:
     strategy:
       matrix:
         opencv-version: [4.10.0]
-        os-compiler:
-          - { msvc-version: vs2019, windows-version: 2019, toolset-version: v142 }
-          # - { msvc-version: vs2022, windows-version: 2022, toolset-version: v143 }
-    runs-on: windows-${{ matrix.os-compiler.windows-version }}
+        os:
+          - {
+              arch: x64,
+              toolset-version: v142,
+            }
+          # - {
+          #     msvc-version: vs2022,
+          #     windows-version: 2022,
+          #     toolset-version: v143,
+          #   }
+    runs-on: windows-2019
     env:
       UseMultiToolTask: true
-      COMMON_CMAKE_OPTIONS: -T ${{ matrix.os-compiler.toolset-version }},host=x64 `
+      COMMON_CMAKE_OPTIONS: |
+        -T ${{ matrix.os.toolset-version }},host=x64 `
         -DCMAKE_INSTALL_PREFIX=install `
-        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib/modules" `
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
     steps:
-    - uses: actions/checkout@v4
-    - name: setup-opencv-source
-      run: |
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
-        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-        echo "SOURCE_DIR=opencv" >> $env:GITHUB_ENV
-        echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os-compiler.msvc-version }}" >> $env:GITHUB_ENV
-    - name: build-x64
-      run: |
-        cd ${{ env.SOURCE_DIR }}
-        mkdir build-x64; cd build-x64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `
-          -A x64 `
-          $(type ../../options.txt) `
-          -DBUILD_opencv_world=OFF ..
-        cmake --build . --config Release -j 4
-        cmake --build . --config Release --target install
-    # - name: build-arm64
-    #   if: matrix.os-compiler.msvc-version == 'vs2019' || matrix.os-compiler.msvc-version == 'vs2022'
-    #   run: |
-    #     cd ${{ env.SOURCE_DIR }}
-    #     mkdir build-arm64; cd build-arm64
-    #     cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A arm64 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM64 $(type ../../options.txt) -DBUILD_opencv_world=OFF ..
-    #     cmake --build . --config Release -j 4
-    #     cmake --build . --config Release --target install
-    - name: package
-      if: matrix.os-compiler.msvc-version == 'vs2019' || matrix.os-compiler.msvc-version == 'vs2022'
-      run: |
-        mkdir ${{ env.PACKAGE_NAME }}
-        mkdir ${{ env.PACKAGE_NAME }}/x64
-        # mkdir ${{ env.PACKAGE_NAME }}/arm64
-        Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build-x64\install\*" -Destination "${{ env.PACKAGE_NAME }}\x64"
-        # Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build-arm64\install\*" -Destination "${{ env.PACKAGE_NAME }}\arm64"
-        tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}
-    - name: test-x64
-      run: |
-        cd test
-        mkdir build-x64; cd build-x64
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} `
-          -A x64 `
-          -DOpenCV_DIR="$env:GITHUB_WORKSPACE\${{ env.PACKAGE_NAME }}\x64" `
-          -DOpenCV_STATIC=ON ..
-        cmake --build . --config Release -j 4
-    # - name: test-arm64
-    #   if: matrix.os-compiler.msvc-version == 'vs2019' || matrix.os-compiler.msvc-version == 'vs2022'
-    #   run: |
-    #     cd test
-    #     mkdir build-arm64; cd build-arm64
-    #     cmake ${{ env.COMMON_CMAKE_OPTIONS }} `
-    #        -A arm64 `
-    #        -DOpenCV_DIR="$env:GITHUB_WORKSPACE\${{ env.PACKAGE_NAME }}\arm64" `
-    #        -DOpenCV_STATIC=ON ..
-    #     cmake --build . --config Release -j 4
-    - name: upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.PACKAGE_NAME }}
-        path: ${{ env.PACKAGE_NAME }}.tar.gz
-    - name: release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        draft: true
-        prerelease: false
-        files: |
-          ${{ env.PACKAGE_NAME }}.tar.gz
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+          echo "SOURCE_DIR=opencv" >> $env:GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          wget https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
+          7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
+          Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite ffmpeg
+          mkdir ${{ github.workspace }}/ffmpeg/cmake -Force
+          cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $GITHUB_ENV
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build; cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -A ${{ matrix.os.arch }} `
+            -DCMAKE_SYSTEM_NAME=Windows `
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.os.arch }} `
+            $(type ${{ github.workspace }}/options.txt) `
+            -DBUILD_opencv_world=OFF `
+            -DWITH_IPP=OFF `
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" `
+            -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
+            -DFFMPEG_ARCH=${{ matrix.os.arch }} `
+            ..
+          cmake --build . --config Release -j 4
+          cmake --build . --config Release --target install
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
+          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}
+      - name: test
+        run: |
+          cd test
+          mkdir build; cd build
+          cmake -T ${{ matrix.os.toolset-version }},host=x64 `
+            -DCMAKE_INSTALL_PREFIX=install `
+            -A ${{ matrix.os.arch }} `
+            -DOpenCV_DIR="${{ github.workspace }}\${{ env.PACKAGE_NAME }}" `
+            -DOpenCV_STATIC=ON ..
+          cmake --build . --config Release -j 4
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
