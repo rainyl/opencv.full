@@ -47,8 +47,8 @@ jobs:
           echo "$GITHUB_ENV"
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
-            `cat ${{ github.workspace }}/options.txt` \
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
             -DFFMPEG_ARCH="${{ matrix.abi }}"
           cmake --build . -j $(nproc)

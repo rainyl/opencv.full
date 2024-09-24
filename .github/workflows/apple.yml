@@ -35,6 +35,7 @@ jobs:
         -DBUILD_OPENJPEG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_OPENCL_SVM=OFF \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
@@ -56,8 +57,8 @@ jobs:
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }}  -S .. \
-            `cat ../../options.txt` \
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=OS64 \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
           cmake --build . -j 4
@@ -114,6 +115,7 @@ jobs:
         -DBUILD_OPENJPEG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_OPENCL_SVM=OFF \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
@@ -135,8 +137,8 @@ jobs:
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }}  -S .. \
-            `cat ../../options.txt` \
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=${{ matrix.platform.name }} \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
             -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON
@@ -212,9 +214,9 @@ jobs:
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=${{ matrix.osname.platform }} \
-            `cat ../../options.txt` \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
           cmake --build . -j 4
           cmake --build . --target install

@@ -24,6 +24,7 @@ jobs:
     env:
       UseMultiToolTask: true
       COMMON_CMAKE_OPTIONS: |
+        $(type ${{ github.workspace }}/options.txt) `
         -T ${{ matrix.os.toolset-version }},host=x64 `
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
@@ -31,7 +32,6 @@ jobs:
         -A ${{ matrix.os.arch }} `
         -DCMAKE_SYSTEM_NAME=Windows `
         -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.os.arch }} `
-        $(type ${{ github.workspace }}/options.txt) `
         -DFFMPEG_ARCH=${{ matrix.os.arch }} `
     steps:
       - uses: actions/checkout@v4

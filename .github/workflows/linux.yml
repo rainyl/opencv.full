@@ -60,9 +60,9 @@ jobs:
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             ${{ env.TOOLCHAIN_FILE }} \
-            `cat ${{ github.workspace }}/options.txt` \
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
             -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
           cmake --build . -j $(nproc)
