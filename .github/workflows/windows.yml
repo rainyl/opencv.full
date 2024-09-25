@@ -55,13 +55,14 @@ jobs:
           cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
 
           Remove-Item tmp -Recurse -Force -Confirm:$false
-      - name: make directory
+      - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
-            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake" `
+            -DOPENCV_FFMPEG_SKIP_BUILD_CHECK=ON
           cmake --build . --config Release --target install -j 4
       - name: package
         run: |
@@ -143,7 +144,8 @@ jobs:
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `
-            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake" `
+            -DOPENCV_FFMPEG_SKIP_BUILD_CHECK=ON
           cd ${{ env.SOURCE_DIR }}/build
           cmake --build . --config Release --target install -j 4
       - name: package

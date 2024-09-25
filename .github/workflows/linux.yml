@@ -10,13 +10,12 @@ env:
   FFMPEG_ROOT: /tmp/ffmpeg
 
 jobs:
-  linux:
+  linux-x64:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         opencv-version: [4.10.0]
         os:
-          - { arch: arm64, ffmpeg_arch: arm64 }
           - { arch: x64, ffmpeg_arch: amd64 }
     env:
       COMMON_CMAKE_OPTIONS: |
@@ -25,13 +24,7 @@ jobs:
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
-      - name: setup arm64
-        if: matrix.os.arch == 'arm64'
-        run: |
-          sudo apt-get update
-          sudo apt-get install g++-aarch64-linux-gnu
-      - name: setup x64
-        if: matrix.os.arch == 'x64'
+      - name: setup
         run: |
           sudo apt-get update
           sudo apt-get install libgtk-3-dev
@@ -44,13 +37,6 @@ jobs:
           echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> "$GITHUB_ENV"
           echo "PACKAGE_NAME=libopencv-linux-${{ matrix.os.arch }}" >> "$GITHUB_ENV"
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
-      - name: set toolchain
-        run: |
-          if [ "${{ matrix.os.arch }}" = "arm64" ]; then
-            echo "TOOLCHAIN_FILE='-DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake'" >> "$GITHUB_ENV"
-          else
-            echo "TOOLCHAIN_FILE=" >> "$GITHUB_ENV"
-          fi
       - name: setup ffmpeg
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-lite.tar.xz
@@ -74,7 +60,91 @@ jobs:
           mkdir build && cd build
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
+          cmake --build . -j $(nproc)
+          cmake --build . --target install
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
+
+          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+      - name: test
+        run: |
+          cd test
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             ${{ env.TOOLCHAIN_FILE }} \
+            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+          cmake --build . -j $(nproc)
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
+
+  linux-arm64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+        os:
+          - { arch: arm64, ffmpeg_arch: arm64 }
+    env:
+      COMMON_CMAKE_OPTIONS: |
+        -DCMAKE_INSTALL_PREFIX=install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+    steps:
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install g++-aarch64-linux-gnu
+
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=libopencv-linux-${{ matrix.os.arch }}" >> "$GITHUB_ENV"
+          echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
+      - name: setup ffmpeg
+        run: |
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-lite.tar.xz
+          mkdir -p tmp
+          tar xf ffmpeg.tar.xz -C tmp --strip-components=1
+
+          mkdir -p $FFMPEG_ROOT
+          cp -rf tmp/include $FFMPEG_ROOT
+          cp -rf tmp/lib/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/lib
+          cp -rf tmp/bin/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/bin
+          cp -rf tmp/COPYING.LGPLv2.1 $FFMPEG_ROOT
+          cp -rf tmp/RELEASE_NOTES $FFMPEG_ROOT
+
+          mkdir -p $FFMPEG_ROOT/cmake
+          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
+
+          rm -rf tmp
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build && cd build
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake \
             -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
             -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
           cmake --build . -j $(nproc)
