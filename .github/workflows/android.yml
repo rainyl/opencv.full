@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["main"]
 env:
-  ANDROID_PLATFORM: android-21
+  ANDROID_PLATFORM: android-24
   FFMPEG_ROOT: /tmp/ffmpeg
 
 jobs:
@@ -29,6 +29,7 @@ jobs:
         -DANDROID_ARM_NEON=ON \
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+        -DWITH_ANDROID_MEDIANDK=ON \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
@@ -41,7 +42,7 @@ jobs:
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/android/ffmpeg-6.1-android-lite.tar.xz
           mkdir -p tmp
-          tar xvf ffmpeg.tar.xz -C tmp --strip-components=1
+          tar xf ffmpeg.tar.xz -C tmp --strip-components=1
 
           mkdir -p $FFMPEG_ROOT
           cp -rf tmp/include $FFMPEG_ROOT
@@ -52,12 +53,10 @@ jobs:
 
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
 
           rm -rf tmp
       - name: build
         run: |
-          echo "$GITHUB_ENV"
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
           cmake `cat ${{ github.workspace }}/options.txt` \

@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  FFMPEG_ROOT: ${{ github.workspace }}/ffmpeg
+
 jobs:
   windows:
     strategy:
@@ -40,16 +43,16 @@ jobs:
           wget -q https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite tmp
-          mkdir -Force ${{ env.FFMPEG_ROOT }}
+          mkdir -Force $env:FFMPEG_ROOT
 
-          Move-Item -Force tmp/include ${{ env.FFMPEG_ROOT }}/
-          Move-Item -Force tmp/bin/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/bin
-          Move-Item -Force tmp/lib/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/lib
-          Move-Item -Force tmp/COPYING.LGPLv2.1 ${{ env.FFMPEG_ROOT }}/
-          Move-Item -Force tmp/RELEASE_NOTES ${{ env.FFMPEG_ROOT }}/
+          Move-Item -Force tmp/include $env:FFMPEG_ROOT/
+          Move-Item -Force tmp/bin/${{ matrix.os.arch }} $env:FFMPEG_ROOT/bin
+          Move-Item -Force tmp/lib/${{ matrix.os.arch }} $env:FFMPEG_ROOT/lib
+          Move-Item -Force tmp/COPYING.LGPLv2.1 $env:FFMPEG_ROOT/
+          Move-Item -Force tmp/RELEASE_NOTES $env:FFMPEG_ROOT/
 
-          mkdir ${{ env.FFMPEG_ROOT }}/cmake -Force
-          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ env.FFMPEG_ROOT }}/cmake/
+          mkdir $env:FFMPEG_ROOT/cmake -Force
+          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
 
           Remove-Item tmp -Recurse -Force -Confirm:$false
       - name: make directory
@@ -58,7 +61,7 @@ jobs:
           mkdir build
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
-            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
           cmake --build . --config Release --target install -j 4
       - name: package
         run: |
@@ -123,16 +126,16 @@ jobs:
           wget -q https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite tmp
-          mkdir -Force ${{ env.FFMPEG_ROOT }}
+          mkdir -Force $env:FFMPEG_ROOT
 
-          Move-Item -Force tmp/include ${{ env.FFMPEG_ROOT }}/
-          Move-Item -Force tmp/bin/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/bin
-          Move-Item -Force tmp/lib/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/lib
-          Move-Item -Force tmp/COPYING.LGPLv2.1 ${{ env.FFMPEG_ROOT }}/
-          Move-Item -Force tmp/RELEASE_NOTES ${{ env.FFMPEG_ROOT }}/
+          Move-Item -Force tmp/include $env:FFMPEG_ROOT/
+          Move-Item -Force tmp/bin/${{ matrix.os.arch }} $env:FFMPEG_ROOT/bin
+          Move-Item -Force tmp/lib/${{ matrix.os.arch }} $env:FFMPEG_ROOT/lib
+          Move-Item -Force tmp/COPYING.LGPLv2.1 $env:FFMPEG_ROOT/
+          Move-Item -Force tmp/RELEASE_NOTES $env:FFMPEG_ROOT/
 
-          mkdir ${{ env.FFMPEG_ROOT }}/cmake -Force
-          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ env.FFMPEG_ROOT }}/cmake/
+          mkdir $env:FFMPEG_ROOT/cmake -Force
+          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -140,7 +143,7 @@ jobs:
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `
-            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
           cd ${{ env.SOURCE_DIR }}/build
           cmake --build . --config Release --target install -j 4
       - name: package

@@ -7,7 +7,6 @@ on:
     branches: ["main"]
 
 env:
-  ANDROID_PLATFORM: android-21
   FFMPEG_ROOT: /tmp/ffmpeg
 
 jobs:
@@ -56,7 +55,7 @@ jobs:
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-lite.tar.xz
           mkdir -p tmp
-          tar xvf ffmpeg.tar.xz -C tmp --strip-components=1
+          tar xf ffmpeg.tar.xz -C tmp --strip-components=1
 
           mkdir -p $FFMPEG_ROOT
           cp -rf tmp/include $FFMPEG_ROOT
@@ -67,7 +66,6 @@ jobs:
 
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
 
           rm -rf tmp
       - name: build

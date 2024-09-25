@@ -50,7 +50,7 @@ jobs:
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
           mkdir -p $FFMPEG_ROOT
-          tar xvf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
@@ -129,7 +129,7 @@ jobs:
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
           mkdir -p $FFMPEG_ROOT
-          tar xvf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
@@ -205,7 +205,7 @@ jobs:
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-lite.tar.xz
           mkdir -p $FFMPEG_ROOT
-          tar xvf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
