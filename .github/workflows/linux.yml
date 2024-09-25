@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  ANDROID_PLATFORM: android-21
+  FFMPEG_ROOT: /tmp/ffmpeg
+
 jobs:
   linux:
     runs-on: ubuntu-latest
@@ -50,12 +54,22 @@ jobs:
           fi
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-default.tar.xz
-          mkdir -p ffmpeg
-          tar xf ffmpeg.tar.xz -C ffmpeg --strip-components=1
-          mkdir -p ${{ github.workspace }}/ffmpeg/cmake
-          cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-lite.tar.xz
+          mkdir -p tmp
+          tar xvf ffmpeg.tar.xz -C tmp --strip-components=1
+
+          mkdir -p $FFMPEG_ROOT
+          cp -rf tmp/include $FFMPEG_ROOT
+          cp -rf tmp/lib/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/lib
+          cp -rf tmp/bin/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/bin
+          cp -rf tmp/COPYING.LGPLv2.1 $FFMPEG_ROOT
+          cp -rf tmp/RELEASE_NOTES $FFMPEG_ROOT
+
+          mkdir -p $FFMPEG_ROOT/cmake
+          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
           echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> "$GITHUB_ENV"
+
+          rm -rf tmp
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -63,7 +77,7 @@ jobs:
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             ${{ env.TOOLCHAIN_FILE }} \
-            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake" \
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
             -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
           cmake --build . -j $(nproc)
           cmake --build . --target install
@@ -72,18 +86,7 @@ jobs:
           mkdir ${{ env.PACKAGE_NAME }}
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
 
-          mkdir -p ${{ env.PACKAGE_NAME }}/ffmpeg
-          cp -rf ${{ env.FFMPEG_ROOT }}/include ${{ env.PACKAGE_NAME }}/ffmpeg/
-          mkdir -p ${{ env.PACKAGE_NAME }}/ffmpeg/bin
-          cp -rf ${{ env.FFMPEG_ROOT }}/bin/${{ matrix.os.ffmpeg_arch }} ${{ env.PACKAGE_NAME }}/ffmpeg/bin
-          mkdir -p ${{ env.PACKAGE_NAME }}/ffmpeg/lib
-          cp -rf ${{ env.FFMPEG_ROOT }}/lib/${{ matrix.os.ffmpeg_arch }} ${{ env.PACKAGE_NAME }}/ffmpeg/lib
-          cp -rf ${{ env.FFMPEG_ROOT }}/cmake ${{ env.PACKAGE_NAME }}/ffmpeg/cmake
-          cp -rf ${{ env.FFMPEG_ROOT }}/Changelog ${{ env.PACKAGE_NAME }}/ffmpeg/Changelog
-          cp -rf ${{ env.FFMPEG_ROOT }}/config-${{ matrix.os.ffmpeg_arch }}.txt ${{ env.PACKAGE_NAME }}/ffmpeg/config.txt
-          cp -rf ${{ env.FFMPEG_ROOT }}/COPYING.LGPLv2.1 ${{ env.PACKAGE_NAME }}/ffmpeg/COPYING.LGPLv2.1
-          cp -rf ${{ env.FFMPEG_ROOT }}/README.txt ${{ env.PACKAGE_NAME }}/ffmpeg/README.txt
-          cp -rf ${{ env.FFMPEG_ROOT }}/RELEASE_NOTES ${{ env.PACKAGE_NAME }}/ffmpeg/RELEASE_NOTES
+          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
 
           tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test

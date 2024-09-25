@@ -12,14 +12,7 @@ jobs:
       matrix:
         opencv-version: [4.10.0]
         os:
-          - {
-              arch: x64,
-              toolset-version: v142,
-            }
-          - {
-              arch: arm64,
-              toolset-version: v142,
-            }
+          - { arch: x64, toolset-version: v142 }
     runs-on: windows-2019
     env:
       UseMultiToolTask: true
@@ -29,9 +22,8 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
-        -A ${{ matrix.os.arch }} `
+        -A x64 `
         -DCMAKE_SYSTEM_NAME=Windows `
-        -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.os.arch }} `
         -DFFMPEG_ARCH=${{ matrix.os.arch }} `
     steps:
       - uses: actions/checkout@v4
@@ -43,32 +35,112 @@ jobs:
           echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
       - name: setup ffmpeg
         run: |
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
           choco install wget --no-progress
           wget -q https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
           7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
-          Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite ffmpeg
-          mkdir ${{ github.workspace }}/ffmpeg/cmake -Force
-          cp ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ github.workspace }}/ffmpeg/cmake/
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
+          Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite tmp
+          mkdir -Force ${{ env.FFMPEG_ROOT }}
+
+          Move-Item -Force tmp/include ${{ env.FFMPEG_ROOT }}/
+          Move-Item -Force tmp/bin/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/bin
+          Move-Item -Force tmp/lib/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/lib
+          Move-Item -Force tmp/COPYING.LGPLv2.1 ${{ env.FFMPEG_ROOT }}/
+          Move-Item -Force tmp/RELEASE_NOTES ${{ env.FFMPEG_ROOT }}/
+
+          mkdir ${{ env.FFMPEG_ROOT }}/cmake -Force
+          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ env.FFMPEG_ROOT }}/cmake/
+
+          Remove-Item tmp -Recurse -Force -Confirm:$false
       - name: make directory
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build
-      - name: generate arm64
-        if: ${{ matrix.os.arch }} == 'arm64'
+          cd ${{ env.SOURCE_DIR }}/build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
+            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
+          cmake --build . --config Release --target install -j 4
+      - name: package
         run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
+          tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz ${{ env.PACKAGE_NAME }}
+      - name: test
+        run: |
+          cd test
+          mkdir build; cd build
+          cmake -T ${{ matrix.os.toolset-version }},host=x64 `
+            -DCMAKE_INSTALL_PREFIX=install `
+            -A x64 `
+            -DOpenCV_DIR="${{ github.workspace }}\${{ env.PACKAGE_NAME }}" `
+            -DOpenCV_STATIC=ON ..
+          cmake --build . --config Release -j 4
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
+
+  windows-arm64:
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+        os:
+          - { arch: arm64, toolset-version: v142 }
+    runs-on: windows-2019
+    env:
+      UseMultiToolTask: true
+      COMMON_CMAKE_OPTIONS: |
+        $(type ${{ github.workspace }}/options.txt) `
+        -T ${{ matrix.os.toolset-version }},host=x64 `
+        -DCMAKE_INSTALL_PREFIX=install `
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
+        -A ARM64 `
+        -DCMAKE_SYSTEM_NAME=Windows `
+        -DCMAKE_SYSTEM_PROCESSOR=ARM64 `
+        -DFFMPEG_ARCH=${{ matrix.os.arch }} `
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
+          echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
+      - name: setup ffmpeg
+        run: |
+          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
+          choco install wget --no-progress
+          wget -q https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
+          7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
+          Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite tmp
+          mkdir -Force ${{ env.FFMPEG_ROOT }}
+
+          Move-Item -Force tmp/include ${{ env.FFMPEG_ROOT }}/
+          Move-Item -Force tmp/bin/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/bin
+          Move-Item -Force tmp/lib/${{ matrix.os.arch }} ${{ env.FFMPEG_ROOT }}/lib
+          Move-Item -Force tmp/COPYING.LGPLv2.1 ${{ env.FFMPEG_ROOT }}/
+          Move-Item -Force tmp/RELEASE_NOTES ${{ env.FFMPEG_ROOT }}/
+
+          mkdir ${{ env.FFMPEG_ROOT }}/cmake -Force
+          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake ${{ env.FFMPEG_ROOT }}/cmake/
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `
             -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
-      - name: generate x64
-        if: ${{ matrix.os.arch }} == 'x64'
-        run: |
-          cd ${{ env.SOURCE_DIR }}/build
-          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
-            -DFFMPEG_DIR="${{ env.FFMPEG_ROOT }}/cmake"
-      - name: build
-        run: |
           cd ${{ env.SOURCE_DIR }}/build
           cmake --build . --config Release --target install -j 4
       - name: package
@@ -82,7 +154,7 @@ jobs:
           mkdir build; cd build
           cmake -T ${{ matrix.os.toolset-version }},host=x64 `
             -DCMAKE_INSTALL_PREFIX=install `
-            -A ${{ matrix.os.arch }} `
+            -A ARM64 `
             -DOpenCV_DIR="${{ github.workspace }}\${{ env.PACKAGE_NAME }}" `
             -DOpenCV_STATIC=ON ..
           cmake --build . --config Release -j 4
