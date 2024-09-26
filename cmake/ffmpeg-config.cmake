@@ -130,12 +130,12 @@ set(
   swresample
 )
 
-set(FFMPEG_FIND_COMPONENTS
-  avcodec
-  avformat
-  avutil
-  swscale
-)
+# set(FFMPEG_FIND_COMPONENTS
+#   avcodec
+#   avformat
+#   avutil
+#   swscale
+# )
 
 set(component_avcodec libavcodec avcodec avcodec.h)
 set(component_avdevice libavdevice avdevice avdevice.h)
