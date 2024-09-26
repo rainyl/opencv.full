@@ -93,47 +93,48 @@ The following cache variables may also be set:
 
 #]=======================================================================]
 
+option(FFMPEG_USE_STATIC_LIBS "Use static libs (only for windows now)" ON)
+
 include(FindPackageHandleStandardArgs)
 
 if(NOT DEFINED FFMPEG_ROOT)
-    get_filename_component(FFMPEG_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+  get_filename_component(FFMPEG_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 endif()
 
 # some builds have multiple architectures like `lib/arm64`
 if(NOT DEFINED FFMPEG_ARCH)
-    message(WARNING "FFMPEG_ARCH not defined, set to: ${CMAKE_SYSTEM_PROCESSOR}")
-    string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} FFMPEG_ARCH)
+  message(STATUS "FFMPEG_ARCH not defined, set to: ${CMAKE_SYSTEM_PROCESSOR}")
+  string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} FFMPEG_ARCH)
 endif()
 
-message(STATUS "FFMPEG:")
-message(STATUS "  FFMPEG_ROOT: ${FFMPEG_ROOT}")
-message(STATUS "  FFMPEG_ARCH: ${FFMPEG_ARCH}")
+message(STATUS "FFMPEG_ROOT: ${FFMPEG_ROOT}")
+message(STATUS "FFMPEG_ARCH: ${FFMPEG_ARCH}")
 
 # https://stackoverflow.com/a/46057018/18539998
 if(ANDROID)
-    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
-    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
-    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+  set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 endif()
 
 set(
-    _DEFAULT_COMPONENTS
-    avcodec
-    avdevice
-    avformat
-    avfilter
-    avresample
-    avutil
-    postproc
-    swscale
-    swresample
+  _DEFAULT_COMPONENTS
+  avcodec
+  avdevice
+  avformat
+  avfilter
+  avresample
+  avutil
+  postproc
+  swscale
+  swresample
 )
 
 set(FFMPEG_FIND_COMPONENTS
-    avcodec
-    avformat
-    avutil
-    swscale
+  avcodec
+  avformat
+  avutil
+  swscale
 )
 
 set(component_avcodec libavcodec avcodec avcodec.h)
@@ -147,310 +148,328 @@ set(component_swscale libswscale swscale swscale.h)
 set(component_swresample libswresample swresample swresample.h)
 
 if(NOT FFMPEG_FIND_COMPONENTS)
-    set(FFMPEG_FIND_COMPONENTS ${_DEFAULT_COMPONENTS})
+  set(FFMPEG_FIND_COMPONENTS ${_DEFAULT_COMPONENTS})
 endif()
 
 # ffmpeg_find_component: Find and set up requested FFMPEG component
 macro(ffmpeg_find_component component)
-    list(GET component_${component} 0 component_libname)
-    list(GET component_${component} 1 component_name)
-    list(GET component_${component} 2 component_header)
+  list(GET component_${component} 0 component_libname)
+  list(GET component_${component} 1 component_name)
+  list(GET component_${component} 2 component_header)
 
-    if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-        find_package(PkgConfig)
-        set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${FFMPEG_ROOT}/lib/pkgconfig")
+  if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    find_package(PkgConfig)
+    set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${FFMPEG_ROOT}/lib/pkgconfig")
 
-        if(PKG_CONFIG_FOUND)
-            pkg_search_module(PC_FFMPEG_${component} QUIET ${component_libname})
-        endif()
+    if(PKG_CONFIG_FOUND)
+      pkg_search_module(PC_FFMPEG_${component} QUIET ${component_libname})
     endif()
+  endif()
 
-    find_path(
-        FFMPEG_${component}_INCLUDE_DIR
-        NAMES ${component_libname}/${component_header} ${component_libname}/version.h
-        HINTS ${PC_FFMPEG_${component}_INCLUDE_DIRS}
-        PATHS
-        "${FFMPEG_ROOT}/include"
-        ~/Library/Frameworks
-        /Library/Frameworks
-        /usr/local/include
-        /usr/include
-        /sw/include # Fink
-        /opt/local/include # DarwinPorts
-        /opt/csw/include # Blastwave
-        /opt/include
-        /usr/freeware/include
-        DOC "FFMPEG component ${component_name} include directory"
+  find_path(
+    FFMPEG_${component}_INCLUDE_DIR
+    NAMES ${component_libname}/${component_header} ${component_libname}/version.h
+    HINTS ${PC_FFMPEG_${component}_INCLUDE_DIRS}
+    PATHS
+    "${FFMPEG_ROOT}/include"
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /usr/local/include
+    /usr/include
+    /sw/include # Fink
+    /opt/local/include # DarwinPorts
+    /opt/csw/include # Blastwave
+    /opt/include
+    /usr/freeware/include
+    DOC "FFMPEG component ${component_name} include directory"
+  )
+
+  ffmpeg_check_version()
+
+  if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    find_library(
+      FFMPEG_${component}_IMPLIB
+      NAMES ${component_libname} ${component_name}
+      HINTS ${FFMPEG_ROOT}/lib
+      PATHS
+      ${FFMPEG_ROOT}/lib/${FFMPEG_ARCH}
+      DOC "FFMPEG component ${component_name} import library location"
     )
 
-    ffmpeg_check_version()
-
-    if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-        find_library(
-            FFMPEG_${component}_IMPLIB
-            NAMES ${component_libname} ${component_name}
-            HINTS ${FFMPEG_ROOT}/lib
-            PATHS
-            ${FFMPEG_ROOT}/lib/${FFMPEG_ARCH}
-            DOC "FFMPEG component ${component_name} import library location"
-        )
-
-        ffmpeg_find_dll()
+    if(FFMPEG_USE_STATIC_LIBS)
+      set(FFMPEG_${component}_LIBRARY "${FFMPEG_${component}_IMPLIB}")
     else()
-        find_library(
-            FFMPEG_${component}_LIBRARY
-            NAMES ${component_libname} ${component_name}
-            HINTS ${PC_FFMPEG_${component}_LIBRARY_DIRS}
-            PATHS
-            "${FFMPEG_ROOT}/lib"
-            "${FFMPEG_ROOT}/lib/${FFMPEG_ARCH}"
-            ~/Library/Frameworks
-            /Library/Frameworks
-            /usr/local/lib
-            /usr/local/lib64
-            /usr/lib
-            /usr/lib64
-            /sw/lib
-            /opt/local/lib
-            /opt/csw/lib
-            /opt/lib
-            /usr/freeware/lib64
-            "${FFMPEG_ROOT}/bin"
-            "${FFMPEG_ROOT}/bin/${FFMPEG_ARCH}"
-            DOC "FFMPEG component ${component_name} location"
-        )
+      ffmpeg_find_dll()
     endif()
 
-    if(FFMPEG_${component}_LIBRARY AND FFMPEG_${component}_INCLUDE_DIR)
-        set(FFMPEG_${component}_FOUND TRUE)
-        set(FFMPEG_${component}_LIBRARIES ${${_library_var}})
-        set(FFMPEG_${component}_INCLUDE_DIRS ${FFMPEG_${component}_INCLUDE_DIR})
-        set(FFMPEG_${component}_DEFINITIONS ${PC_FFMPEG_${component}_CFLAGS_OTHER})
-        mark_as_advanced(FFMPEG_${component}_LIBRARY FFMPEG_${component}_INCLUDE_DIR FFMPEG_${component}_IMPLIB)
-    endif()
+  else()
+    find_library(
+      FFMPEG_${component}_LIBRARY
+      NAMES ${component_libname} ${component_name}
+      HINTS ${PC_FFMPEG_${component}_LIBRARY_DIRS}
+      PATHS
+      "${FFMPEG_ROOT}/lib"
+      "${FFMPEG_ROOT}/lib/${FFMPEG_ARCH}"
+      ~/Library/Frameworks
+      /Library/Frameworks
+      /usr/local/lib
+      /usr/local/lib64
+      /usr/lib
+      /usr/lib64
+      /sw/lib
+      /opt/local/lib
+      /opt/csw/lib
+      /opt/lib
+      /usr/freeware/lib64
+      "${FFMPEG_ROOT}/bin"
+      "${FFMPEG_ROOT}/bin/${FFMPEG_ARCH}"
+      DOC "FFMPEG component ${component_name} location"
+    )
+  endif()
 
-    message(DEBUG "[FindFFMPEG]:  ${component_name}:")
-    message(DEBUG "[FindFFMPEG]:    LIBRARY: ${FFMPEG_${component}_LIBRARY}")
-    message(DEBUG "[FindFFMPEG]:    IMPLIB: ${FFMPEG_${component}_IMPLIB}")
-    message(DEBUG "[FindFFMPEG]:    INCLUDE: ${FFMPEG_${component}_INCLUDE_DIR}")
-    message(DEBUG "[FindFFMPEG]:    DEFINITIONS: ${FFMPEG_${component}_DEFINITIONS}")
-    message(DEBUG "[FindFFMPEG]:    FFMPEG_${component}_VERSION: ${FFMPEG_${component}_VERSION}")
-    message(DEBUG "[FindFFMPEG]:    PC_FFMPEG_${component}_VERSION: ${PC_FFMPEG_${component}_VERSION}")
-    message(DEBUG "[FindFFMPEG]:    PC_FFMPEG_${component}_INCLUDE_DIRS: ${PC_FFMPEG_${component}_INCLUDE_DIRS}")
-    message(DEBUG "[FindFFMPEG]:    PC_FFMPEG_${component}_LIBRARY_DIRS: ${PC_FFMPEG_${component}_LIBRARY_DIRS}")
+  if(FFMPEG_${component}_LIBRARY AND FFMPEG_${component}_INCLUDE_DIR)
+    set(FFMPEG_${component}_FOUND TRUE)
+    set(FFMPEG_${component}_LIBRARIES ${${_library_var}})
+    set(FFMPEG_${component}_INCLUDE_DIRS ${FFMPEG_${component}_INCLUDE_DIR})
+    set(FFMPEG_${component}_DEFINITIONS ${PC_FFMPEG_${component}_CFLAGS_OTHER})
+    mark_as_advanced(FFMPEG_${component}_LIBRARY FFMPEG_${component}_INCLUDE_DIR FFMPEG_${component}_IMPLIB)
+  endif()
+
+  message(DEBUG "[FindFFMPEG]:  ${component_name}:")
+  message(DEBUG "[FindFFMPEG]:    LIBRARY: ${FFMPEG_${component}_LIBRARY}")
+  message(DEBUG "[FindFFMPEG]:    IMPLIB: ${FFMPEG_${component}_IMPLIB}")
+  message(DEBUG "[FindFFMPEG]:    INCLUDE: ${FFMPEG_${component}_INCLUDE_DIR}")
+  message(DEBUG "[FindFFMPEG]:    DEFINITIONS: ${FFMPEG_${component}_DEFINITIONS}")
+  message(DEBUG "[FindFFMPEG]:    FFMPEG_${component}_VERSION: ${FFMPEG_${component}_VERSION}")
+  message(DEBUG "[FindFFMPEG]:    PC_FFMPEG_${component}_VERSION: ${PC_FFMPEG_${component}_VERSION}")
+  message(DEBUG "[FindFFMPEG]:    PC_FFMPEG_${component}_INCLUDE_DIRS: ${PC_FFMPEG_${component}_INCLUDE_DIRS}")
+  message(DEBUG "[FindFFMPEG]:    PC_FFMPEG_${component}_LIBRARY_DIRS: ${PC_FFMPEG_${component}_LIBRARY_DIRS}")
 endmacro()
 
 # ffmpeg_find_dll: Macro to find DLL for corresponding import library
 macro(ffmpeg_find_dll)
-    cmake_path(GET FFMPEG_${component}_IMPLIB PARENT_PATH _implib_path)
-    cmake_path(SET _bin_path NORMALIZE "${FFMPEG_ROOT}/bin")
+  cmake_path(GET FFMPEG_${component}_IMPLIB PARENT_PATH _implib_path)
+  cmake_path(SET _bin_path NORMALIZE "${FFMPEG_ROOT}/bin")
 
-    string(REGEX REPLACE "([0-9]+)\\.[0-9]+\\.[0-9]+" "\\1" _dll_version "${FFMPEG_${component}_VERSION}")
+  string(REGEX REPLACE "([0-9]+)\\.[0-9]+\\.[0-9]+" "\\1" _dll_version "${FFMPEG_${component}_VERSION}")
 
-    find_program(
-        FFMPEG_${component}_LIBRARY
-        NAMES ${component_name}-${_dll_version}.dll
-        HINTS ${_implib_path} ${_bin_path}
-        DOC "FFMPEG component ${component_name} DLL location"
-    )
+  find_program(
+    FFMPEG_${component}_LIBRARY
+    NAMES ${component_name}-${_dll_version}.dll
+    HINTS ${_implib_path} ${_bin_path}
+    DOC "FFMPEG component ${component_name} DLL location"
+  )
 
-    if(NOT FFMPEG_${component}_LIBRARY)
-        set(FFMPEG_${component}_LIBRARY "${FFMPEG_${component}_IMPLIB}")
-    endif()
+  if(NOT FFMPEG_${component}_LIBRARY)
+    set(FFMPEG_${component}_LIBRARY "${FFMPEG_${component}_IMPLIB}")
+  endif()
 
-    unset(_implib_path)
-    unset(_bin_path)
-    unset(_dll_version)
+  unset(_implib_path)
+  unset(_bin_path)
+  unset(_dll_version)
 endmacro()
 
 # ffmpeg_check_version: Macro to help extract version number from FFMPEG headers
 macro(ffmpeg_check_version)
-    if(PC_FFMPEG_${component}_VERSION)
-        set(FFMPEG_${component_libname}_VERSION ${PC_FFMPEG_${component}_VERSION})
-    elseif(EXISTS "${FFMPEG_${component}_INCLUDE_DIR}/${component_libname}/version.h")
-        # get major version from version_major if version_major.h exists
-        if(EXISTS "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version_major.h")
-            set(_major_version_file "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version_major.h")
-        else()
-            # otherwise get major version from version.h
-            set(_major_version_file "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version.h")
-        endif()
-
-        # get major version
-        file(
-            STRINGS
-            ${_major_version_file}
-            _version_string
-            REGEX "^.*VERSION_MAJOR[ \t]+[0-9]+[ \t]*$"
-        )
-        string(REGEX REPLACE ".*VERSION_MAJOR[ \t]+([0-9]+).*" "\\1" _version_major "${_version_string}")
-
-        # get minor and micro version
-        file(
-            STRINGS
-            "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version.h"
-            _version_string
-            REGEX "^.*VERSION_(MINOR|MICRO)[ \t]+[0-9]+[ \t]*$"
-        )
-        string(REGEX REPLACE ".*VERSION_MINOR[ \t]+([0-9]+).*" "\\1" _version_minor "${_version_string}")
-        string(REGEX REPLACE ".*VERSION_MICRO[ \t]+([0-9]+).*" "\\1" _version_micro "${_version_string}")
-
-        if(NOT _version_major STREQUAL "" AND NOT _version_minor STREQUAL "" AND NOT _version_micro STREQUAL "")
-            set(FFMPEG_${component}_VERSION "${_version_major}.${_version_minor}.${_version_micro}")
-            set(FFMPEG_${component_libname}_VERSION "${_version_major}.${_version_minor}.${_version_micro}")
-            message(DEBUG "[FindFFMPEG]: found ${component}: ${_version_major}.${_version_minor}.${_version_micro}")
-        else()
-            message(AUTHOR_WARNING "Failed to find ${component_name} version.")
-        endif()
-
-        unset(_version_major)
-        unset(_version_minor)
-        unset(_version_micro)
-        unset(_version_string)
-        unset(_major_version_file)
+  if(PC_FFMPEG_${component}_VERSION)
+    set(FFMPEG_${component_libname}_VERSION ${PC_FFMPEG_${component}_VERSION})
+  elseif(EXISTS "${FFMPEG_${component}_INCLUDE_DIR}/${component_libname}/version.h")
+    # get major version from version_major if version_major.h exists
+    if(EXISTS "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version_major.h")
+      set(_major_version_file "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version_major.h")
     else()
-        if(NOT FFMPEG_FIND_QUIETLY)
-            message(AUTHOR_WARNING "Failed to find ${component_name} version.")
-        endif()
-
-        set(FFMPEG_${component_libname}_VERSION 0.0.0)
+      # otherwise get major version from version.h
+      set(_major_version_file "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version.h")
     endif()
+
+    # get major version
+    file(
+      STRINGS
+      ${_major_version_file}
+      _version_string
+      REGEX "^.*VERSION_MAJOR[ \t]+[0-9]+[ \t]*$"
+    )
+    string(REGEX REPLACE ".*VERSION_MAJOR[ \t]+([0-9]+).*" "\\1" _version_major "${_version_string}")
+
+    # get minor and micro version
+    file(
+      STRINGS
+      "${FFMPEG_${component}_INCLUDE_DIR}/lib${component}/version.h"
+      _version_string
+      REGEX "^.*VERSION_(MINOR|MICRO)[ \t]+[0-9]+[ \t]*$"
+    )
+    string(REGEX REPLACE ".*VERSION_MINOR[ \t]+([0-9]+).*" "\\1" _version_minor "${_version_string}")
+    string(REGEX REPLACE ".*VERSION_MICRO[ \t]+([0-9]+).*" "\\1" _version_micro "${_version_string}")
+
+    if(NOT _version_major STREQUAL "" AND NOT _version_minor STREQUAL "" AND NOT _version_micro STREQUAL "")
+      set(FFMPEG_${component}_VERSION "${_version_major}.${_version_minor}.${_version_micro}")
+      set(FFMPEG_${component_libname}_VERSION "${_version_major}.${_version_minor}.${_version_micro}")
+      message(DEBUG "[FindFFMPEG]: found ${component}: ${_version_major}.${_version_minor}.${_version_micro}")
+    else()
+      message(AUTHOR_WARNING "Failed to find ${component_name} version.")
+    endif()
+
+    unset(_version_major)
+    unset(_version_minor)
+    unset(_version_micro)
+    unset(_version_string)
+    unset(_major_version_file)
+  else()
+    if(NOT FFMPEG_FIND_QUIETLY)
+      message(AUTHOR_WARNING "Failed to find ${component_name} version.")
+    endif()
+
+    set(FFMPEG_${component_libname}_VERSION 0.0.0)
+  endif()
 endmacro()
 
 # ffmpeg_set_soname: Set SONAME property on imported library targets
 macro(ffmpeg_set_soname)
-    if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
-        execute_process(
-            COMMAND sh -c "otool -D '${FFMPEG_${component}_LIBRARY}' | grep -v '${FFMPEG_${component}_LIBRARY}'"
-            OUTPUT_VARIABLE _output
-            RESULT_VARIABLE _result
-        )
+  if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+    execute_process(
+      COMMAND sh -c "otool -D '${FFMPEG_${component}_LIBRARY}' | grep -v '${FFMPEG_${component}_LIBRARY}'"
+      OUTPUT_VARIABLE _output
+      RESULT_VARIABLE _result
+    )
 
-        if(_result EQUAL 0 AND _output MATCHES "^@rpath/")
-            set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_output}")
-        endif()
-    elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux|FreeBSD")
-        execute_process(
-            COMMAND sh -c "objdump -p '${FFMPEG_${component}_LIBRARY}' | grep SONAME"
-            OUTPUT_VARIABLE _output
-            RESULT_VARIABLE _result
-        )
-
-        if(_result EQUAL 0)
-            string(REGEX REPLACE "[ \t]+SONAME[ \t]+([^ \t]+)" "\\1" _soname "${_output}")
-            set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_soname}")
-            unset(_soname)
-        endif()
+    if(_result EQUAL 0 AND _output MATCHES "^@rpath/")
+      set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_output}")
     endif()
+  elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux|FreeBSD")
+    execute_process(
+      COMMAND sh -c "objdump -p '${FFMPEG_${component}_LIBRARY}' | grep SONAME"
+      OUTPUT_VARIABLE _output
+      RESULT_VARIABLE _result
+    )
 
-    unset(_output)
-    unset(_result)
+    if(_result EQUAL 0)
+      string(REGEX REPLACE "[ \t]+SONAME[ \t]+([^ \t]+)" "\\1" _soname "${_output}")
+      set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_soname}")
+      unset(_soname)
+    endif()
+  endif()
+
+  unset(_output)
+  unset(_result)
 endmacro()
 
 macro(ffmpeg_create_target component)
-    if(FFMPEG_${component}_FOUND AND NOT TARGET FFMPEG::${component})
-        if(IS_ABSOLUTE "${FFMPEG_${component}_LIBRARY}")
-            if(DEFINED FFMPEG_${component}_IMPLIB)
-                if(FFMPEG_${component}_IMPLIB STREQUAL FFMPEG_${component}_LIBRARY)
-                    add_library(FFMPEG::${component} STATIC IMPORTED)
-                else()
-                    add_library(FFMPEG::${component} SHARED IMPORTED)
-                    set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_IMPLIB "${FFMPEG_${component}_IMPLIB}")
-                endif()
-            else()
-                add_library(FFMPEG::${component} UNKNOWN IMPORTED)
-                ffmpeg_set_soname()
-            endif()
-
-            set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_LOCATION "${FFMPEG_${component}_LIBRARY}")
+  if(FFMPEG_${component}_FOUND AND NOT TARGET FFMPEG::${component})
+    if(IS_ABSOLUTE "${FFMPEG_${component}_LIBRARY}")
+      if(DEFINED FFMPEG_${component}_IMPLIB)
+        if(FFMPEG_${component}_IMPLIB STREQUAL FFMPEG_${component}_LIBRARY)
+          add_library(FFMPEG::${component} STATIC IMPORTED)
         else()
-            add_library(FFMPEG::${component} INTERFACE IMPORTED)
-            set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_LIBNAME "${FFMPEG_${component}_LIBRARY}")
-        endif()
-
-        set_target_properties(
+          add_library(FFMPEG::${component} SHARED IMPORTED)
+          set_target_properties(
             FFMPEG::${component}
             PROPERTIES
-            INTERFACE_COMPILE_OPTIONS "${PC_FFMPEG_${component}_CFLAGS_OTHER}"
-            INTERFACE_INCLUDE_DIRECTORIES "${FFMPEG_${component}_INCLUDE_DIR}"
-            INSTALL_RPATH "$ORIGIN"
-            VERSION ${FFMPEG_${component_libname}_VERSION}
-        )
+            IMPORTED_IMPLIB "${FFMPEG_${component}_IMPLIB}"
+          )
+        endif()
+      else()
+        add_library(FFMPEG::${component} UNKNOWN IMPORTED)
+        ffmpeg_set_soname()
+      endif()
 
-        # get_target_property(_ffmpeg_interface_libraries FFMPEG::FFMPEG INTERFACE_LINK_LIBRARIES)
-
-        # if(NOT FFMPEG::${component} IN_LIST _ffmpeg_interface_libraries)
-        # set_property(TARGET FFMPEG::FFMPEG APPEND PROPERTY INTERFACE_LINK_LIBRARIES FFMPEG::${component})
-        # endif()
+      set_target_properties(
+        FFMPEG::${component}
+        PROPERTIES
+        IMPORTED_LOCATION "${FFMPEG_${component}_LIBRARY}"
+      )
+    else()
+      add_library(FFMPEG::${component} INTERFACE IMPORTED)
+      set_target_properties(
+        FFMPEG::${component}
+        PROPERTIES
+        IMPORTED_LIBNAME "${FFMPEG_${component}_LIBRARY}"
+      )
     endif()
+
+    set_target_properties(
+      FFMPEG::${component}
+      PROPERTIES
+      INTERFACE_COMPILE_OPTIONS "${PC_FFMPEG_${component}_CFLAGS_OTHER}"
+      INTERFACE_INCLUDE_DIRECTORIES "${FFMPEG_${component}_INCLUDE_DIR}"
+      VERSION ${FFMPEG_${component_libname}_VERSION}
+    )
+
+    # get_target_property(_ffmpeg_interface_libraries FFMPEG::FFMPEG INTERFACE_LINK_LIBRARIES)
+
+    # if(NOT FFMPEG::${component} IN_LIST _ffmpeg_interface_libraries)
+    # set_property(TARGET FFMPEG::FFMPEG APPEND PROPERTY INTERFACE_LINK_LIBRARIES FFMPEG::${component})
+    # endif()
+  endif()
 endmacro()
 
 foreach(component IN LISTS FFMPEG_FIND_COMPONENTS)
-    if(NOT component IN_LIST _DEFAULT_COMPONENTS)
-        message(FATAL_ERROR "Unknown FFMPEG component specified: ${component}.")
-    endif()
+  if(NOT component IN_LIST _DEFAULT_COMPONENTS)
+    message(FATAL_ERROR "Unknown FFMPEG component specified: ${component}.")
+  endif()
 
-    if(NOT FFMPEG_${component}_FOUND)
-        ffmpeg_find_component(${component})
-    endif()
+  if(NOT FFMPEG_${component}_FOUND)
+    ffmpeg_find_component(${component})
+  endif()
 
-    if(FFMPEG_${component}_FOUND)
-        set(FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_${component}_LIBRARY})
-        set(FFMPEG_DEFINITIONS ${FFMPEG_DEFINITIONS} ${FFMPEG_${component}_DEFINITIONS})
-        set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS} ${FFMPEG_${component}_INCLUDE_DIR})
-    endif()
+  if(FFMPEG_${component}_FOUND)
+    set(FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_${component}_LIBRARY})
+    set(FFMPEG_DEFINITIONS ${FFMPEG_DEFINITIONS} ${FFMPEG_${component}_DEFINITIONS})
+    set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS} ${FFMPEG_${component}_INCLUDE_DIR})
+  endif()
 endforeach()
 
 if(NOT FFMPEG_avutil_FOUND)
-    ffmpeg_find_component(avutil)
+  ffmpeg_find_component(avutil)
 endif()
 
 if(EXISTS "${FFMPEG_avutil_INCLUDE_DIR}/libavutil/ffversion.h")
-    file(
-        STRINGS
-        "${FFMPEG_avutil_INCLUDE_DIR}/libavutil/ffversion.h"
-        _version_string
-        REGEX "FFMPEG_VERSION"
-    )
-    string(REGEX REPLACE ".*\"n?\(.*\)\"" "\\1" FFMPEG_VERSION "${_version_string}")
+  file(
+    STRINGS
+    "${FFMPEG_avutil_INCLUDE_DIR}/libavutil/ffversion.h"
+    _version_string
+    REGEX "FFMPEG_VERSION"
+  )
+  string(REGEX REPLACE ".*\"n?\(.*\)\"" "\\1" FFMPEG_VERSION "${_version_string}")
 endif()
 
 unset(_version_string)
+
+message(STATUS "FFMPEG_VERSION: ${FFMPEG_VERSION}")
 
 list(REMOVE_DUPLICATES FFMPEG_INCLUDE_DIRS)
 list(REMOVE_DUPLICATES FFMPEG_LIBRARIES)
 list(REMOVE_DUPLICATES FFMPEG_DEFINITIONS)
 
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin|Windows")
-    set(FFMPEG_ERROR_REASON "Ensure that obs-deps is provided as part of CMAKE_PREFIX_PATH.")
+  set(FFMPEG_ERROR_REASON "Ensure that obs-deps is provided as part of CMAKE_PREFIX_PATH.")
 elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux|FreeBSD")
-    set(FFMPEG_ERROR_REASON "Ensure that required FFMPEG libraries are installed on the system.")
+  set(FFMPEG_ERROR_REASON "Ensure that required FFMPEG libraries are installed on the system.")
 endif()
 
 find_package_handle_standard_args(
-    FFMPEG
-    REQUIRED_VARS FFMPEG_LIBRARIES FFMPEG_INCLUDE_DIRS
-    VERSION_VAR FFMPEG_VERSION
-    HANDLE_COMPONENTS
-    REASON_FAILURE_MESSAGE "${FFMPEG_ERROR_REASON}"
+  FFMPEG
+  REQUIRED_VARS FFMPEG_ROOT FFMPEG_LIBRARIES FFMPEG_INCLUDE_DIRS
+  VERSION_VAR FFMPEG_VERSION
+  HANDLE_COMPONENTS
+  REASON_FAILURE_MESSAGE "${FFMPEG_ERROR_REASON}"
 )
 
 if(FFMPEG_FOUND AND NOT TARGET FFMPEG::FFMPEG)
-    add_library(FFMPEG::FFMPEG INTERFACE IMPORTED)
+  add_library(FFMPEG::FFMPEG INTERFACE IMPORTED)
 
-    foreach(component IN LISTS FFMPEG_FIND_COMPONENTS)
-        ffmpeg_create_target(${component})
+  foreach(component IN LISTS FFMPEG_FIND_COMPONENTS)
+    ffmpeg_create_target(${component})
 
-        if(FFMPEG_${component}_FOUND)
-            set_property(TARGET FFMPEG::FFMPEG APPEND PROPERTY INTERFACE_LINK_LIBRARIES FFMPEG::${component})
-        endif()
-    endforeach()
+    if(FFMPEG_${component}_FOUND)
+      set_property(TARGET FFMPEG::FFMPEG APPEND PROPERTY INTERFACE_LINK_LIBRARIES FFMPEG::${component})
+    endif()
+  endforeach()
 endif()
 
 include(FeatureSummary)
 set_package_properties(
-    FFMPEG
-    PROPERTIES
-    URL "https://www.ffmpeg.org"
-    DESCRIPTION "A complete, cross-platform solution to record, convert and stream audio and video."
+  FFMPEG
+  PROPERTIES
+  URL "https://www.ffmpeg.org"
+  DESCRIPTION "A complete, cross-platform solution to record, convert and stream audio and video."
 )

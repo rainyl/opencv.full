@@ -39,21 +39,12 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-lite.tar.xz
-          mkdir -p tmp
-          tar xf ffmpeg.tar.xz -C tmp --strip-components=1
-
+          wget -q -O ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linux64-lgpl-shared-6.1.tar.xz
           mkdir -p $FFMPEG_ROOT
-          cp -rf tmp/include $FFMPEG_ROOT
-          cp -rf tmp/lib/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/lib
-          cp -rf tmp/bin/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/bin
-          cp -rf tmp/COPYING.LGPLv2.1 $FFMPEG_ROOT
-          cp -rf tmp/RELEASE_NOTES $FFMPEG_ROOT
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
 
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
-
-          rm -rf tmp
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -78,7 +69,8 @@ jobs:
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
             ${{ env.TOOLCHAIN_FILE }} \
-            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
+            -DFFMPEG_DIR=$FFMPEG_ROOT/cmake ..
           cmake --build . -j $(nproc)
       - name: upload
         uses: actions/upload-artifact@v4
@@ -123,21 +115,12 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/linux/ffmpeg-6.1-linux-clang-lite.tar.xz
-          mkdir -p tmp
-          tar xf ffmpeg.tar.xz -C tmp --strip-components=1
-
+          wget -q -O ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linuxarm64-lgpl-shared-6.1.tar.xz
           mkdir -p $FFMPEG_ROOT
-          cp -rf tmp/include $FFMPEG_ROOT
-          cp -rf tmp/lib/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/lib
-          cp -rf tmp/bin/${{ matrix.os.ffmpeg_arch }} $FFMPEG_ROOT/bin
-          cp -rf tmp/COPYING.LGPLv2.1 $FFMPEG_ROOT
-          cp -rf tmp/RELEASE_NOTES $FFMPEG_ROOT
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
 
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
-
-          rm -rf tmp
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -162,8 +145,9 @@ jobs:
           cd test
           mkdir build && cd build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
-            ${{ env.TOOLCHAIN_FILE }} \
-            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} ..
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake \
+            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
+            -DFFMPEG_DIR=$FFMPEG_ROOT/cmake ..
           cmake --build . -j $(nproc)
       - name: upload
         uses: actions/upload-artifact@v4

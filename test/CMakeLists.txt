@@ -13,8 +13,9 @@ if(LINUX OR APPLE)
 endif()
 
 find_package(OpenCV REQUIRED)
+find_package(FFMPEG REQUIRED)
 
 add_executable(opencv-mobile-test main.cpp)
-target_include_directories(opencv-mobile-test PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_include_directories(opencv-mobile-test PRIVATE ${OpenCV_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS})
 
-target_link_libraries(opencv-mobile-test opencv_highgui opencv_core opencv_imgproc)
+target_link_libraries(opencv-mobile-test opencv_highgui opencv_core opencv_imgproc ${FFMPEG_LIBRARIES})

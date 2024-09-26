@@ -82,6 +82,7 @@ jobs:
             -DANDROID_ABI="${{ matrix.abi }}" \
             -DANDROID_ARM_NEON=ON \
             -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/sdk/native/jni \
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
             ..
           cmake --build . -j $(nproc)
       - name: upload
