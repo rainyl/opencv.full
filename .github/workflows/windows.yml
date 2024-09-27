@@ -55,8 +55,7 @@ jobs:
           cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
       - name: build
         run: |
-          cd ${{ env.SOURCE_DIR }}
-          mkdir build
+          mkdir -Force ${{ env.SOURCE_DIR }}/build
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
@@ -117,9 +116,10 @@ jobs:
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
+          
+          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-          echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
-          echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
       - name: download ffmpeg
         uses: robinraju/release-downloader@v1.10
         with:
@@ -136,8 +136,7 @@ jobs:
           cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
       - name: build
         run: |
-          cd ${{ env.SOURCE_DIR }}
-          mkdir build
+          mkdir -Force ${{ env.SOURCE_DIR }}/build
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `

@@ -110,6 +110,9 @@ jobs:
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          
+          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       - name: setup ffmpeg
         run: |
