@@ -102,9 +102,28 @@ if(NOT DEFINED FFMPEG_ROOT)
 endif()
 
 # some builds have multiple architectures like `lib/arm64`
-if(NOT DEFINED FFMPEG_ARCH)
-  message(STATUS "FFMPEG_ARCH not defined, set to: ${CMAKE_SYSTEM_PROCESSOR}")
-  string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} FFMPEG_ARCH)
+if(DEFINED FFMPEG_ARCH)
+# custom overridden values
+elseif(MSVC)
+  # see Modules/CMakeGenericSystem.cmake
+  if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
+    set(FFMPEG_ARCH "x64")
+  elseif("${CMAKE_GENERATOR_PLATFORM}" MATCHES "ARM64")
+    set(FFMPEG_ARCH "ARM64")
+  elseif("${CMAKE_GENERATOR}" MATCHES "ARM")
+    set(FFMPEG_ARCH "ARM")
+  elseif("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
+    set(FFMPEG_ARCH "x64")
+  else()
+    set(FFMPEG_ARCH x86)
+  endif()
+elseif(MINGW)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
+    set(FFMPEG_ARCH x64)
+  else()
+    set(FFMPEG_ARCH x86)
+  endif()
+  message(STATUS "FFMPEG_ARCH not defined, set to: ${FFMPEG_ARCH}")
 endif()
 
 message(STATUS "FFMPEG_ROOT: ${FFMPEG_ROOT}")
@@ -131,12 +150,11 @@ set(
 )
 
 # set(FFMPEG_FIND_COMPONENTS
-#   avcodec
-#   avformat
-#   avutil
-#   swscale
+# avcodec
+# avformat
+# avutil
+# swscale
 # )
-
 set(component_avcodec libavcodec avcodec avcodec.h)
 set(component_avdevice libavdevice avdevice avdevice.h)
 set(component_avformat libavformat avformat avformat.h)
@@ -306,7 +324,7 @@ macro(ffmpeg_check_version)
       set(FFMPEG_${component_libname}_VERSION "${_version_major}.${_version_minor}.${_version_micro}")
       message(DEBUG "[FindFFMPEG]: found ${component}: ${_version_major}.${_version_minor}.${_version_micro}")
     else()
-      message(AUTHOR_WARNING "Failed to find ${component_name} version.")
+      message(STATUS "Failed to find ${component_name} version.")
     endif()
 
     unset(_version_major)
@@ -316,7 +334,7 @@ macro(ffmpeg_check_version)
     unset(_major_version_file)
   else()
     if(NOT FFMPEG_FIND_QUIETLY)
-      message(AUTHOR_WARNING "Failed to find ${component_name} version.")
+      message(STATUS "Failed to find ${component_name} version.")
     endif()
 
     # set(FFMPEG_${component_libname}_VERSION 0.0.0)
@@ -412,7 +430,10 @@ foreach(component IN LISTS FFMPEG_FIND_COMPONENTS)
   endif()
 
   if(FFMPEG_${component}_FOUND)
-    set(FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_${component}_LIBRARY})
+    ffmpeg_create_target(${component})
+
+    # set(FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_${component}_LIBRARY})
+    set(FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} FFMPEG::${component})
     set(FFMPEG_DEFINITIONS ${FFMPEG_DEFINITIONS} ${FFMPEG_${component}_DEFINITIONS})
     set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS} ${FFMPEG_${component}_INCLUDE_DIR})
   endif()
@@ -458,8 +479,6 @@ if(FFMPEG_FOUND AND NOT TARGET FFMPEG::FFMPEG)
   add_library(FFMPEG::FFMPEG INTERFACE IMPORTED)
 
   foreach(component IN LISTS FFMPEG_FIND_COMPONENTS)
-    ffmpeg_create_target(${component})
-
     if(FFMPEG_${component}_FOUND)
       set_property(TARGET FFMPEG::FFMPEG APPEND PROPERTY INTERFACE_LINK_LIBRARIES FFMPEG::${component})
     endif()
