@@ -319,7 +319,7 @@ macro(ffmpeg_check_version)
       message(AUTHOR_WARNING "Failed to find ${component_name} version.")
     endif()
 
-    set(FFMPEG_${component_libname}_VERSION 0.0.0)
+    # set(FFMPEG_${component_libname}_VERSION 0.0.0)
   endif()
 endmacro()
 

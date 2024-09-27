@@ -39,11 +39,9 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linux64-lgpl-shared-6.1.tar.xz
-          mkdir -p $FFMPEG_ROOT
-          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
-
+          wget -q -O ffmpeg.tar.xz https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linux64-lgpl-shared-6.1.tar.xz
           mkdir -p $FFMPEG_ROOT/cmake
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
         run: |
@@ -115,11 +113,9 @@ jobs:
           echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> "$GITHUB_ENV"
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linuxarm64-lgpl-shared-6.1.tar.xz
-          mkdir -p $FFMPEG_ROOT
-          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
-
+          wget -q -O ffmpeg.tar.xz https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linuxarm64-lgpl-shared-6.1.tar.xz
           mkdir -p $FFMPEG_ROOT/cmake
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
         run: |

@@ -36,33 +36,28 @@ jobs:
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
           echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
           echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
+      - name: download ffmpeg
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "rainyl/FFmpeg-Builds"
+          latest: true
+          fileName: "ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip"
+          out-file-path: 'ffmpeg_tmp'
+          extract: true
       - name: setup ffmpeg
         run: |
+          ls ffmpeg_tmp
           echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
-          choco install wget --no-progress
-          wget -q https://sourceforge.net/projects/avbuild/files/windows-desktop/ffmpeg-6.1-windows-desktop-vs2022-lite.7z
-          7z x ffmpeg-6.1-windows-desktop-vs2022-lite.7z
-          Move-Item -Force ffmpeg-6.1-windows-desktop-vs2022-lite tmp
-          mkdir -Force $env:FFMPEG_ROOT
-
-          Move-Item -Force tmp/include $env:FFMPEG_ROOT/
-          Move-Item -Force tmp/bin/${{ matrix.os.arch }} $env:FFMPEG_ROOT/bin
-          Move-Item -Force tmp/lib/${{ matrix.os.arch }} $env:FFMPEG_ROOT/lib
-          Move-Item -Force tmp/COPYING.LGPLv2.1 $env:FFMPEG_ROOT/
-          Move-Item -Force tmp/RELEASE_NOTES $env:FFMPEG_ROOT/
-
-          mkdir $env:FFMPEG_ROOT/cmake -Force
+          mkdir -Force $env:FFMPEG_ROOT/cmake
+          Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
           cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
-
-          Remove-Item tmp -Recurse -Force -Confirm:$false
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
-            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake" `
-            -DOPENCV_FFMPEG_SKIP_BUILD_CHECK=ON
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
           cmake --build . --config Release --target install -j 4
       - name: package
         run: |
@@ -121,15 +116,20 @@ jobs:
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
           echo "SOURCE_DIR=${{ github.workspace }}/opencv" >> $env:GITHUB_ENV
           echo "PACKAGE_NAME=libopencv-windows-${{ matrix.os.arch }}" >> $env:GITHUB_ENV
+      - name: download ffmpeg
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "rainyl/FFmpeg-Builds"
+          latest: true
+          fileName: "ffmpeg-n6.1-latest-winarm64-lgpl-shared-6.1.zip"
+          out-file-path: 'ffmpeg_tmp'
+          extract: true
       - name: setup ffmpeg
         run: |
+          ls ffmpeg_tmp
           echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
-          choco install wget --no-progress
-          wget -q https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip
-          unzip -q ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip
-          Move-Item -Force ffmpeg-n6.1-latest-win64-lgpl-shared-6.1 $env:FFMPEG_ROOT
-
-          mkdir $env:FFMPEG_ROOT/cmake -Force
+          mkdir -Force $env:FFMPEG_ROOT/cmake
+          Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
           cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
       - name: build
         run: |
@@ -138,8 +138,7 @@ jobs:
           cd ${{ env.SOURCE_DIR }}/build
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `
-            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake" `
-            -DOPENCV_FFMPEG_SKIP_BUILD_CHECK=ON
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
           cd ${{ env.SOURCE_DIR }}/build
           cmake --build . --config Release --target install -j 4
       - name: package
