@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir ${{ env.PACKAGE_NAME }}
           Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
-          cp -Force $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+          cp -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
           tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
         run: |
