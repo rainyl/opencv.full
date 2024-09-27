@@ -50,7 +50,7 @@ jobs:
           echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
           mkdir -Force $env:FFMPEG_ROOT/cmake
           Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
-          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
+          cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir ${{ env.PACKAGE_NAME }}
           Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
-          cp -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+          cp -Recurse -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
           tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
         run: |
@@ -131,7 +131,7 @@ jobs:
           echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
           mkdir -Force $env:FFMPEG_ROOT/cmake
           Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
-          cp -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
+          cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
       - name: build
         run: |
           cd ${{ env.SOURCE_DIR }}
@@ -146,7 +146,7 @@ jobs:
         run: |
           mkdir ${{ env.PACKAGE_NAME }}
           Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
-          cp -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+          cp -Recurse -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
           tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
         run: |
