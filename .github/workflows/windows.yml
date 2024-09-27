@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 env:
-  FFMPEG_ROOT: ${{ github.workspace }}/ffmpeg
+  FFMPEG_ROOT: C:\ffmpeg
 
 jobs:
   windows:
@@ -47,7 +47,6 @@ jobs:
       - name: setup ffmpeg
         run: |
           ls ffmpeg_tmp
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
           mkdir -Force $env:FFMPEG_ROOT/cmake
           Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
           cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
@@ -128,7 +127,6 @@ jobs:
       - name: setup ffmpeg
         run: |
           ls ffmpeg_tmp
-          echo "FFMPEG_ROOT=${{ github.workspace }}/ffmpeg" >> $env:GITHUB_ENV
           mkdir -Force $env:FFMPEG_ROOT/cmake
           Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
           cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
