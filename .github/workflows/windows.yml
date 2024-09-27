@@ -141,7 +141,6 @@ jobs:
           cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
             -DWITH_IPP=OFF `
             -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
-          cd ${{ env.SOURCE_DIR }}/build
           cmake --build . --config Release --target install -j 4
       - name: package
         run: |
