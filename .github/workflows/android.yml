@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["main"]
 env:
-  ANDROID_PLATFORM: android-22
+  ANDROID_PLATFORM: android-24 # NDK Camera is only available sine Android 24
   FFMPEG_ROOT: /tmp/ffmpeg
   SOURCE_DIR: opencv
 
