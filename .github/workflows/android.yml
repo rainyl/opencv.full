@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["main"]
 env:
-  ANDROID_PLATFORM: android-24
+  ANDROID_PLATFORM: android-24 # NDK Camera is only available sine Android 24
   FFMPEG_ROOT: /tmp/ffmpeg
   SOURCE_DIR: opencv
 
@@ -21,7 +21,7 @@ jobs:
       PACKAGE_NAME: libopencv-android-${{ matrix.abi }}
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_POLICY_DEFAULT_CMP0057=NEW \
-        -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
         -DANDROID_USE_LEGACY_TOOLCHAIN_FILE=False \
         -DANDROID_PLATFORM=$ANDROID_PLATFORM \
         -DCMAKE_INSTALL_PREFIX=install \
@@ -32,8 +32,13 @@ jobs:
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
         -DWITH_ANDROID_MEDIANDK=ON \
+        -DWITH_IPP=OFF \
     steps:
       - uses: actions/checkout@v4
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r25c
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
@@ -59,6 +64,8 @@ jobs:
 
           rm -rf tmp
       - name: build
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           cd ${{ env.SOURCE_DIR }}
           mkdir build && cd build
@@ -78,6 +85,8 @@ jobs:
 
           tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
       - name: test
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           cd test
           mkdir build && cd build
