@@ -63,7 +63,8 @@ jobs:
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=OS64 \
-            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake"
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DBUILD_opencv_world=ON
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
@@ -145,7 +146,8 @@ jobs:
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=${{ matrix.platform.name }} \
             -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
-            -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON
+            -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON \
+            -DBUILD_opencv_world=ON
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
@@ -222,7 +224,8 @@ jobs:
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=${{ matrix.osname.platform }} \
-            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake"
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DBUILD_opencv_world=ON
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
