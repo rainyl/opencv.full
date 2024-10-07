@@ -15,12 +15,12 @@ Pod::Spec.new do |s|
                          DESC
 
     s.homepage         = 'https://github.com/rainyl/opencv.full'
-    s.license          = { :type => 'MIT', :file => 'LICENSE' }
+    s.license          = { :type => 'Apache License, Version 2.0', :file => 'LICENSE' }
     s.author           = { 'rainyl' => 'rainyliusy3@gmail.com' }
     s.authors          = 'https://github.com/opencv/opencv/graphs/contributors'
     s.documentation_url = 'https://docs.opencv.org/master/'
 
-    s.source           = { :http => 'https://github.com/rainyl/opencv.full/releases/download/#{s.version.to_s}/libopencv-ios.zip' }
+    s.source           = { :http => "https://github.com/rainyl/opencv.full/releases/download/#{s.version.to_s}/libopencv-ios.zip" }
 
     s.frameworks       = 'Accelerate', 'AssetsLibrary', 'AVFoundation', 'CoreGraphics', 'CoreImage', 'CoreMedia', 'CoreVideo', 'Foundation', 'QuartzCore', 'UIKit'
     s.ios.deployment_target = '12.0'
