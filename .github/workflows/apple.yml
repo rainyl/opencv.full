@@ -43,6 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
+        shell: zsh {0}
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
           
@@ -57,6 +58,7 @@ jobs:
       #     mkdir -p $FFMPEG_ROOT/cmake
       #     cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
+        shell: zsh {0}
         run: |
           mkdir -p opencv/build
           cd opencv/build
@@ -116,6 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
+        shell: zsh {0}
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           
@@ -130,6 +133,7 @@ jobs:
       #     mkdir -p $FFMPEG_ROOT/cmake
       #     cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
+        shell: zsh {0}
         run: |
           mkdir -p opencv/build
           cd opencv/build
@@ -223,6 +227,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
+        shell: zsh {0}
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           
@@ -230,6 +235,7 @@ jobs:
           
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       - name: setup ffmpeg
+        shell: zsh {0}
         run: |
           wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-lite.tar.xz
           mkdir -p $FFMPEG_ROOT
@@ -237,6 +243,7 @@ jobs:
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
+        shell: zsh {0}
         run: |
           mkdir -p opencv/build
           cd opencv/build
