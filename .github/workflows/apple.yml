@@ -72,13 +72,13 @@ jobs:
           chmod +x ${{ github.workspace }}/scripts/build_framework.sh
           ${{ github.workspace }}/scripts/build_framework.sh \
             ${{ env.SOURCE_DIR }}/build/install \
-            opencv2.framework
+            frameworks/opencv2.framework
           # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: opencv2.framework
+          path: frameworks/
       # - name: test
       #   run: |
       #     cd test
@@ -154,13 +154,13 @@ jobs:
           chmod +x ${{ github.workspace }}/scripts/build_framework.sh
           ${{ github.workspace }}/scripts/build_framework.sh \
             ${{ env.SOURCE_DIR }}/build/install \
-            opencv2.framework
+            frameworks/opencv2.framework
           # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: opencv2.framework
+          path: frameworks/
       # - name: test
       #   run: |
       #     cd test
@@ -191,11 +191,12 @@ jobs:
         with:
           path: artifacts
           pattern: libopencv-ios*
-          extract: true
           merge-multiple: false
       - name: create ios xcframework
         run: |
+          ls -R artifacts
           cd artifacts
+          
           mkdir -p iossimulator
           cp -rf libopencv-iossimulator-arm64/* iossimulator/
           cp -rf libopencv-iossimulator-x64/* iossimulator/
@@ -274,13 +275,13 @@ jobs:
           chmod +x ${{ github.workspace }}/scripts/build_framework.sh
           ${{ github.workspace }}/scripts/build_framework.sh \
             ${{ env.SOURCE_DIR }}/build/install \
-            opencv2.framework
+            frameworks/opencv2.framework
           # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: ${{ env.PACKAGE_NAME }}.tar.gz
+          path: frameworks
       # - name: test
       #   run: |
       #     cd test
@@ -310,10 +311,10 @@ jobs:
         with:
           path: artifacts
           pattern: libopencv-macos*
-          extract: true
           merge-multiple: false
       - name: create xcframework
         run: |
+          ls -R artifacts
           cd artifacts
 
           xcodebuild -create-xcframework \
