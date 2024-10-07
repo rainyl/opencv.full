@@ -88,14 +88,6 @@ jobs:
       #       -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
       #     cmake --build . -j 4
-      # - name: release
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   with:
-      #     draft: true
-      #     prerelease: false
-      #     files: |
-      #       ${{ env.PACKAGE_NAME }}.tar.gz
 
   ios-simulator:
     runs-on: macos-14
@@ -170,14 +162,6 @@ jobs:
       #       -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
       #     cmake --build . -j 4
-      # - name: release
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   with:
-      #     draft: true
-      #     prerelease: false
-      #     files: |
-      #       ${{ env.PACKAGE_NAME }}.tar.gz
 
   release-ios:
     permissions:
@@ -208,11 +192,8 @@ jobs:
             -framework libopencv-ios-arm64/opencv2.framework \
             -framework libopencv-iossimulator/opencv2.framework \
             -output opencv2.xcframework
-          ls -R .
           
           zip -9 -y -r libopencv-ios.zip opencv2.xcframework
-          
-          ls -R .
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -290,14 +271,7 @@ jobs:
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
       #       ..
       #     cmake --build . -j 4
-      # - name: release
-      #   uses: softprops/action-gh-release@v1
-      #   if: startsWith(github.ref, 'refs/tags/')
-      #   with:
-      #     draft: true
-      #     prerelease: false
-      #     files: |
-      #       ${{ env.PACKAGE_NAME }}.tar.gz
+
   release-macos:
     permissions:
       contents: write  # for softprops/action-gh-release to create a release
@@ -313,7 +287,6 @@ jobs:
           merge-multiple: false
       - name: create xcframework
         run: |
-          ls -R artifacts
           cd artifacts
 
           mkdir -p libopencv-macos
@@ -327,11 +300,8 @@ jobs:
           xcodebuild -create-xcframework \
             -framework libopencv-macos/opencv2.framework \
             -output opencv2.xcframework
-          ls -R .
           
           zip -9 -y -r libopencv-macos.zip opencv2.xcframework
-          
-          ls -R .
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')

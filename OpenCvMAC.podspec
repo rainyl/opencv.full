@@ -1,5 +1,5 @@
 #
-# Be sure to run `pod lib lint OpenCvStatic.podspec' to ensure this is a
+# Be sure to run `pod lib lint OpenCvMAC.podspec' to ensure this is a
 # valid spec before submitting.
 #
 # Any lines starting with a # are optional, but their use is encouraged
@@ -7,9 +7,9 @@
 #
 
 Pod::Spec.new do |s|
-    s.name             = 'OpenCvIOS'
+    s.name             = 'OpenCvMAC'
     s.version          = '4.10.0'
-    s.summary          = 'A short description of OpenCvIOS.'
+    s.summary          = 'A short description of OpenCvMAC.'
     s.description      = <<-DESC
   TODO: Add long description of the pod here.
                          DESC
