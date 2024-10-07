@@ -194,16 +194,15 @@ jobs:
           merge-multiple: false
       - name: create ios xcframework
         run: |
-          ls -R artifacts
           cd artifacts
           
-          mkdir -p iossimulator
-          cp -rf libopencv-iossimulator-arm64/* iossimulator/
-          cp -rf libopencv-iossimulator-x64/* iossimulator/
+          mkdir -p libopencv-iossimulator
+          cp -rf libopencv-iossimulator-arm64/* libopencv-iossimulator/
+          cp -rf libopencv-iossimulator-x64/* libopencv-iossimulator/
           lipo -create \
             libopencv-iossimulator-arm64/opencv2.framework/Versions/A/opencv2 \
             libopencv-iossimulator-x64/opencv2.framework/Versions/A/opencv2 \
-            -output iossimulator/opencv2.framework/Versions/A/opencv2
+            -output libopencv-iossimulator/opencv2.framework/Versions/A/opencv2
 
           xcodebuild -create-xcframework \
             -framework libopencv-ios-arm64/opencv2.framework \
@@ -317,9 +316,16 @@ jobs:
           ls -R artifacts
           cd artifacts
 
+          mkdir -p libopencv-macos
+          cp -rf libopencv-macos-arm64/* libopencv-macos/
+          cp -rf libopencv-macos-x64/* libopencv-macos/
+          lipo -create \
+            libopencv-macos-arm64/opencv2.framework/Versions/A/opencv2 \
+            libopencv-macos-x64/opencv2.framework/Versions/A/opencv2 \
+            -output libopencv-macos/opencv2.framework/Versions/A/opencv2
+
           xcodebuild -create-xcframework \
-            -framework libopencv-macos-arm64/opencv2.framework \
-            -framework libopencv-macos-x64/opencv2.framework \
+            -framework libopencv-macos/opencv2.framework \
             -output opencv2.xcframework
           ls -R .
           
