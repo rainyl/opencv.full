@@ -68,6 +68,7 @@ jobs:
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
+        shell: zsh {0}
         run: |
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
@@ -141,6 +142,7 @@ jobs:
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
+        shell: zsh {0}
         run: |
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
@@ -175,6 +177,7 @@ jobs:
           pattern: libopencv-ios*
           merge-multiple: false
       - name: create ios xcframework
+        shell: zsh {0}
         run: |
           cd artifacts
           
@@ -245,6 +248,7 @@ jobs:
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
+        shell: zsh {0}
         run: |
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
@@ -279,6 +283,7 @@ jobs:
           pattern: libopencv-macos*
           merge-multiple: false
       - name: create xcframework
+        shell: zsh {0}
         run: |
           cd artifacts
 
