@@ -46,16 +46,16 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
           
-          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          # git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
           
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-      - name: setup ffmpeg
-        run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
-          mkdir -p $FFMPEG_ROOT
-          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
-          mkdir -p $FFMPEG_ROOT/cmake
-          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
+      # - name: setup ffmpeg
+      #   run: |
+      #     wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOS/ffmpeg-6.1-iOS-lite-shared.tar.xz
+      #     mkdir -p $FFMPEG_ROOT
+      #     tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+      #     mkdir -p $FFMPEG_ROOT/cmake
+      #     cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
         run: |
           mkdir -p opencv/build
@@ -63,23 +63,22 @@ jobs:
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=OS64 \
-            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DWITH_FFMPEG=OFF \
             -DBUILD_opencv_world=ON
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
         run: |
-          mkdir -p ${{ env.PACKAGE_NAME }}/
-          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-
-          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
-
-          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+          chmod +x ${{ github.workspace }}/scripts/build_framework.sh
+          ${{ github.workspace }}/scripts/build_framework.sh \
+            ${{ env.SOURCE_DIR }}/build/install \
+            opencv2.framework
+          # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: ${{ env.PACKAGE_NAME }}.tar.gz
+          path: opencv2.framework
       # - name: test
       #   run: |
       #     cd test
@@ -89,14 +88,14 @@ jobs:
       #       -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
       #     cmake --build . -j 4
-      - name: release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          draft: true
-          prerelease: false
-          files: |
-            ${{ env.PACKAGE_NAME }}.tar.gz
+      # - name: release
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #     draft: true
+      #     prerelease: false
+      #     files: |
+      #       ${{ env.PACKAGE_NAME }}.tar.gz
 
   ios-simulator:
     runs-on: macos-14
@@ -128,16 +127,16 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
           
-          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          # git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
           
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
-      - name: setup ffmpeg
-        run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
-          mkdir -p $FFMPEG_ROOT
-          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
-          mkdir -p $FFMPEG_ROOT/cmake
-          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
+      # - name: setup ffmpeg
+      #   run: |
+      #     wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/iOSSimulator/ffmpeg-6.1-iOSSimulator-lite-shared.tar.xz
+      #     mkdir -p $FFMPEG_ROOT
+      #     tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+      #     mkdir -p $FFMPEG_ROOT/cmake
+      #     cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
         run: |
           mkdir -p opencv/build
@@ -145,24 +144,23 @@ jobs:
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=${{ matrix.platform.name }} \
-            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DWITH_FFMPEG=OFF \
             -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON \
             -DBUILD_opencv_world=ON
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
         run: |
-          mkdir -p ${{ env.PACKAGE_NAME }}/
-          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-
-          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
-
-          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+          chmod +x ${{ github.workspace }}/scripts/build_framework.sh
+          ${{ github.workspace }}/scripts/build_framework.sh \
+            ${{ env.SOURCE_DIR }}/build/install \
+            opencv2.framework
+          # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: ${{ env.PACKAGE_NAME }}.tar.gz
+          path: opencv2.framework
       # - name: test
       #   run: |
       #     cd test
@@ -172,6 +170,49 @@ jobs:
       #       -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
       #     cmake --build . -j 4
+      # - name: release
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #     draft: true
+      #     prerelease: false
+      #     files: |
+      #       ${{ env.PACKAGE_NAME }}.tar.gz
+
+  release-ios:
+    permissions:
+      contents: write  # for softprops/action-gh-release to create a release
+    needs: [ios, ios-simulator]
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: download
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: libopencv-ios*
+          extract: true
+          merge-multiple: false
+      - name: create ios xcframework
+        run: |
+          cd artifacts
+          mkdir -p iossimulator
+          cp -rf libopencv-iossimulator-arm64/* iossimulator/
+          cp -rf libopencv-iossimulator-x64/* iossimulator/
+          lipo -create \
+            libopencv-iossimulator-arm64/opencv2.framework/Versions/A/opencv2 \
+            libopencv-iossimulator-x64/opencv2.framework/Versions/A/opencv2 \
+            -output iossimulator/opencv2.framework/Versions/A/opencv2
+
+          xcodebuild -create-xcframework \
+            -framework libopencv-ios-arm64/opencv2.framework \
+            -framework libopencv-iossimulator/opencv2.framework \
+            -output opencv2.xcframework
+          ls -R .
+          
+          zip -9 -y -r libopencv-ios.zip opencv2.xcframework
+          
+          ls -R .
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -179,7 +220,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ${{ env.PACKAGE_NAME }}.tar.gz
+            libopencv-ios.zip
 
   macos:
     strategy:
@@ -230,12 +271,11 @@ jobs:
           cmake --build . --target install
       - name: package
         run: |
-          mkdir -p ${{ env.PACKAGE_NAME }}/
-          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
-
-          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
-
-          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+          chmod +x ${{ github.workspace }}/scripts/build_framework.sh
+          ${{ github.workspace }}/scripts/build_framework.sh \
+            ${{ env.SOURCE_DIR }}/build/install \
+            opencv2.framework
+          # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
       - name: upload
         uses: actions/upload-artifact@v4
         with:
@@ -250,6 +290,41 @@ jobs:
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
       #       ..
       #     cmake --build . -j 4
+      # - name: release
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #     draft: true
+      #     prerelease: false
+      #     files: |
+      #       ${{ env.PACKAGE_NAME }}.tar.gz
+  release-macos:
+    permissions:
+      contents: write  # for softprops/action-gh-release to create a release
+    needs: [macos]
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: download
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: libopencv-macos*
+          extract: true
+          merge-multiple: false
+      - name: create xcframework
+        run: |
+          cd artifacts
+
+          xcodebuild -create-xcframework \
+            -framework libopencv-macos-arm64/opencv2.framework \
+            -framework libopencv-macos-x64/opencv2.framework \
+            -output opencv2.xcframework
+          ls -R .
+          
+          zip -9 -y -r libopencv-macos.zip opencv2.xcframework
+          
+          ls -R .
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -257,4 +332,4 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ${{ env.PACKAGE_NAME }}.tar.gz
+            libopencv-macos.zip
