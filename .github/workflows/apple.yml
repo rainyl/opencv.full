@@ -201,7 +201,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            libopencv-ios.zip
+            artifacts/libopencv-ios.zip
 
   macos:
     strategy:
@@ -309,4 +309,4 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            libopencv-macos.zip
+            artifacts/libopencv-macos.zip
