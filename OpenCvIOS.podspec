@@ -34,8 +34,8 @@ Pod::Spec.new do |s|
     # link opencv2 framework
     s.xcconfig = { 'OTHER_LDFLAGS' => '-framework opencv2' }
 
-    s.source_files = 'opencv2.framework/Versions/A/Headers/**/*{.h,.hpp}'
-    s.public_header_files = 'opencv2.framework/Versions/A/Headers/**/*{.h,.hpp}'
+    # s.source_files = 'opencv2.framework/Versions/A/Headers/**/*{.h,.hpp}'
+    # s.public_header_files = 'opencv2.framework/Versions/A/Headers/**/*{.h,.hpp}'
     s.requires_arc = false
     s.static_framework = true
     #s.header_dir       = 'opencv2'

@@ -69,16 +69,15 @@ jobs:
           cmake --build . --target install
       - name: package
         run: |
-          chmod +x ${{ github.workspace }}/scripts/build_framework.sh
-          ${{ github.workspace }}/scripts/build_framework.sh \
-            ${{ env.SOURCE_DIR }}/build/install \
-            frameworks/opencv2.framework
-          # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
+          mkdir -p output/libopencv
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
+          libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
+          rm -rf output/libopencv/lib
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: frameworks/
+          path: output/
       # - name: test
       #   run: |
       #     cd test
@@ -96,7 +95,7 @@ jobs:
         opencv-version: [4.10.0]
         platform:
           - { arch: x64, name: SIMULATOR64 }
-          - { arch: arm64, name: SIMULATORARM64 }
+          # - { arch: arm64, name: SIMULATORARM64 }
     env:
       PACKAGE_NAME: libopencv-iossimulator-${{ matrix.platform.arch }}
       COMMON_CMAKE_OPTIONS: |
@@ -143,16 +142,15 @@ jobs:
           cmake --build . --target install
       - name: package
         run: |
-          chmod +x ${{ github.workspace }}/scripts/build_framework.sh
-          ${{ github.workspace }}/scripts/build_framework.sh \
-            ${{ env.SOURCE_DIR }}/build/install \
-            frameworks/opencv2.framework
-          # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
+          mkdir -p output/libopencv
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
+          libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
+          rm -rf output/libopencv/lib
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: frameworks/
+          path: output/
       # - name: test
       #   run: |
       #     cd test
@@ -180,20 +178,16 @@ jobs:
         run: |
           cd artifacts
           
-          mkdir -p libopencv-iossimulator
-          cp -rf libopencv-iossimulator-arm64/* libopencv-iossimulator/
-          cp -rf libopencv-iossimulator-x64/* libopencv-iossimulator/
-          lipo -create \
-            libopencv-iossimulator-arm64/opencv2.framework/Versions/A/opencv2 \
-            libopencv-iossimulator-x64/opencv2.framework/Versions/A/opencv2 \
-            -output libopencv-iossimulator/opencv2.framework/Versions/A/opencv2
-
-          xcodebuild -create-xcframework \
-            -framework libopencv-ios-arm64/opencv2.framework \
-            -framework libopencv-iossimulator/opencv2.framework \
-            -output opencv2.xcframework
+          mkdir -p libopencv
+          cp -rf libopencv-iossimulator-x64/libopencv/* libopencv/
+          cp -rf libopencv-ios-arm64/libopencv/* libopencv/
           
-          zip -9 -y -r libopencv-ios.zip opencv2.xcframework
+          lipo -create \
+            libopencv-iossimulator-x64/libopencv/libopencv.a \
+            libopencv-ios-arm64/libopencv/libopencv.a \
+            -output libopencv/libopencv.a
+          
+          zip -9 -y -r libopencv-ios.zip libopencv
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -252,16 +246,15 @@ jobs:
           cmake --build . --target install
       - name: package
         run: |
-          chmod +x ${{ github.workspace }}/scripts/build_framework.sh
-          ${{ github.workspace }}/scripts/build_framework.sh \
-            ${{ env.SOURCE_DIR }}/build/install \
-            frameworks/opencv2.framework
-          # tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz opencv2.framework
+          mkdir -p output/libopencv
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
+          libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
+          rm -rf output/libopencv/lib
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: frameworks
+          path: output
       # - name: test
       #   run: |
       #     cd test
@@ -289,19 +282,15 @@ jobs:
         run: |
           cd artifacts
 
-          mkdir -p libopencv-macos
-          cp -rf libopencv-macos-arm64/* libopencv-macos/
-          cp -rf libopencv-macos-x64/* libopencv-macos/
+          mkdir -p libopencv
+          cp -rf libopencv-macos-arm64/libopencv/* libopencv/
+          cp -rf libopencv-macos-x64/libopencv/* libopencv/
           lipo -create \
-            libopencv-macos-arm64/opencv2.framework/Versions/A/opencv2 \
-            libopencv-macos-x64/opencv2.framework/Versions/A/opencv2 \
-            -output libopencv-macos/opencv2.framework/Versions/A/opencv2
-
-          xcodebuild -create-xcframework \
-            -framework libopencv-macos/opencv2.framework \
-            -output opencv2.xcframework
+            libopencv-macos-arm64/libopencv/libopencv.a \
+            libopencv-macos-x64/libopencv/libopencv.a \
+            -output libopencv/libopencv.a
           
-          zip -9 -y -r libopencv-macos.zip opencv2.xcframework
+          zip -9 -y -r libopencv-macos.zip libopencv
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
