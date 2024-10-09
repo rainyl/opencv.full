@@ -75,7 +75,10 @@ jobs:
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
+          mv output/libopencv/lib/cmake output/libopencv/cmake 
           rm -rf output/libopencv/lib
+          mv output/libopencv/cmake output/libopencv/lib/cmake
+          # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
         uses: actions/upload-artifact@v4
         with:
@@ -151,7 +154,10 @@ jobs:
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
+          mv output/libopencv/lib/cmake output/libopencv/cmake 
           rm -rf output/libopencv/lib
+          mv output/libopencv/cmake output/libopencv/lib/cmake
+          # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
         uses: actions/upload-artifact@v4
         with:
@@ -250,6 +256,7 @@ jobs:
           cmake `cat ${{ github.workspace }}/options.txt` \
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=${{ matrix.osname.platform }} \
+            -DWITH_FFMPEG=ON \
             -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
             -DBUILD_opencv_world=ON
           cmake --build . -j 4
@@ -260,7 +267,10 @@ jobs:
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
+          mv output/libopencv/lib/cmake output/libopencv/cmake 
           rm -rf output/libopencv/lib
+          mv output/libopencv/cmake output/libopencv/lib/cmake
+          cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
         uses: actions/upload-artifact@v4
         with:
