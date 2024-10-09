@@ -76,7 +76,7 @@ jobs:
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
           mv output/libopencv/lib/cmake output/libopencv/cmake 
-          rm -rf output/libopencv/lib
+          rm -rf output/libopencv/lib/*
           mv output/libopencv/cmake output/libopencv/lib/cmake
           # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
@@ -155,7 +155,7 @@ jobs:
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
           mv output/libopencv/lib/cmake output/libopencv/cmake 
-          rm -rf output/libopencv/lib
+          rm -rf output/libopencv/lib/*
           mv output/libopencv/cmake output/libopencv/lib/cmake
           # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
@@ -186,7 +186,7 @@ jobs:
           path: artifacts
           pattern: libopencv-ios*
           merge-multiple: false
-      - name: create ios xcframework
+      - name: create ios universal
         shell: zsh {0}
         run: |
           cd artifacts
@@ -268,7 +268,7 @@ jobs:
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
           mv output/libopencv/lib/cmake output/libopencv/cmake 
-          rm -rf output/libopencv/lib
+          rm -rf output/libopencv/lib/*
           mv output/libopencv/cmake output/libopencv/lib/cmake
           cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
@@ -299,7 +299,7 @@ jobs:
           path: artifacts
           pattern: libopencv-macos*
           merge-multiple: false
-      - name: create xcframework
+      - name: create universal
         shell: zsh {0}
         run: |
           cd artifacts
