@@ -123,6 +123,7 @@ elseif(MINGW)
   else()
     set(FFMPEG_ARCH x86)
   endif()
+
   message(STATUS "FFMPEG_ARCH not defined, set to: ${FFMPEG_ARCH}")
 endif()
 
@@ -376,9 +377,9 @@ macro(ffmpeg_create_target component)
     if(IS_ABSOLUTE "${FFMPEG_${component}_LIBRARY}")
       if(DEFINED FFMPEG_${component}_IMPLIB)
         if(FFMPEG_${component}_IMPLIB STREQUAL FFMPEG_${component}_LIBRARY)
-          add_library(FFMPEG::${component} STATIC IMPORTED)
+          add_library(FFMPEG::${component} STATIC IMPORTED GLOBAL)
         else()
-          add_library(FFMPEG::${component} SHARED IMPORTED)
+          add_library(FFMPEG::${component} SHARED IMPORTED GLOBAL)
           set_target_properties(
             FFMPEG::${component}
             PROPERTIES
@@ -386,7 +387,7 @@ macro(ffmpeg_create_target component)
           )
         endif()
       else()
-        add_library(FFMPEG::${component} UNKNOWN IMPORTED)
+        add_library(FFMPEG::${component} UNKNOWN IMPORTED GLOBAL)
         ffmpeg_set_soname()
       endif()
 
@@ -396,7 +397,7 @@ macro(ffmpeg_create_target component)
         IMPORTED_LOCATION "${FFMPEG_${component}_LIBRARY}"
       )
     else()
-      add_library(FFMPEG::${component} INTERFACE IMPORTED)
+      add_library(FFMPEG::${component} INTERFACE IMPORTED GLOBAL)
       set_target_properties(
         FFMPEG::${component}
         PROPERTIES
@@ -462,7 +463,7 @@ list(REMOVE_DUPLICATES FFMPEG_LIBRARIES)
 list(REMOVE_DUPLICATES FFMPEG_LIB_PATHS)
 list(REMOVE_DUPLICATES FFMPEG_DEFINITIONS)
 
-set(FFMPEG_LIB_PATHS  "${FFMPEG_LIB_PATHS}" CACHE INTERNAL "FFMPEG_LIB_PATHS")
+set(FFMPEG_LIB_PATHS "${FFMPEG_LIB_PATHS}" CACHE INTERNAL "FFMPEG_LIB_PATHS")
 
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin|Windows")
   set(FFMPEG_ERROR_REASON "Ensure that obs-deps is provided as part of CMAKE_PREFIX_PATH.")
@@ -479,7 +480,7 @@ find_package_handle_standard_args(
 )
 
 if(FFMPEG_FOUND AND NOT TARGET FFMPEG::FFMPEG)
-  add_library(FFMPEG::FFMPEG INTERFACE IMPORTED)
+  add_library(FFMPEG::FFMPEG INTERFACE IMPORTED GLOBAL)
 
   foreach(component IN LISTS FFMPEG_FIND_COMPONENTS)
     if(FFMPEG_${component}_FOUND)
