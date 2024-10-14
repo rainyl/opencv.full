@@ -409,7 +409,7 @@ macro(ffmpeg_create_target component)
                     )
                 endif ()
             else ()
-                add_library(FFMPEG::${component} UNKNOWN IMPORTED GLOBAL)
+                add_library(FFMPEG::${component} SHARED IMPORTED GLOBAL)
                 ffmpeg_set_soname()
             endif ()
 
