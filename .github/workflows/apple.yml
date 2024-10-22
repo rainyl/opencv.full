@@ -230,6 +230,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release \
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+        -DWITH_OPENCL_SVM=OFF \
     steps:
       - uses: actions/checkout@v4
       - name: setup-opencv-source
