@@ -39,6 +39,8 @@ jobs:
         -DBUILD_OPENJPEG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_OPENCL_SVM=OFF \
+        -DWITH_OPENCLAMDBLAS=ON \
+        -DWITH_OPENCLAMDFFT=ON \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
       - uses: actions/checkout@v4
@@ -115,6 +117,8 @@ jobs:
         -DBUILD_OPENJPEG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_OPENCL_SVM=OFF \
+        -DWITH_OPENCLAMDBLAS=ON \
+        -DWITH_OPENCLAMDFFT=ON \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
     steps:
       - uses: actions/checkout@v4

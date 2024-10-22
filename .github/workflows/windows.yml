@@ -23,12 +23,10 @@ jobs:
       PACKAGE_NAME: libopencv-windows-${{ matrix.os.arch }}
       COMMON_CMAKE_OPTIONS: |
         $(type ${{ github.workspace }}/options.txt) `
-        -T ${{ matrix.os.toolset-version }},host=x64 `
+        -G "Visual Studio 16 2019" `
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
-        -A x64 `
-        -DCMAKE_SYSTEM_NAME=Windows `
         -DFFMPEG_ARCH=${{ matrix.os.arch }} `
     steps:
       - uses: actions/checkout@v4
@@ -103,7 +101,7 @@ jobs:
       PACKAGE_NAME: libopencv-windows-${{ matrix.os.arch }}
       COMMON_CMAKE_OPTIONS: |
         $(type ${{ github.workspace }}/options.txt) `
-        -T ${{ matrix.os.toolset-version }},host=x64 `
+        -G "Visual Studio 16 2019" `
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
