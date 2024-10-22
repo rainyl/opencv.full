@@ -75,9 +75,7 @@ jobs:
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
-          mv output/libopencv/lib/cmake output/libopencv/cmake 
-          rm -rf output/libopencv/lib/*
-          mv output/libopencv/cmake output/libopencv/lib/cmake
+          rm -rf output/libopencv/lib
           # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
         uses: actions/upload-artifact@v4
@@ -154,9 +152,7 @@ jobs:
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
-          mv output/libopencv/lib/cmake output/libopencv/cmake 
-          rm -rf output/libopencv/lib/*
-          mv output/libopencv/cmake output/libopencv/lib/cmake
+          rm -rf output/libopencv/lib
           # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
       - name: upload
         uses: actions/upload-artifact@v4
@@ -266,11 +262,8 @@ jobs:
         run: |
           mkdir -p output/libopencv
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
-          libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
-          mv output/libopencv/lib/cmake output/libopencv/cmake 
-          rm -rf output/libopencv/lib/*
-          mv output/libopencv/cmake output/libopencv/lib/cmake
           cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
+          tar -zcf ${{ env.PACKAGE_NAME }}.tar.gz -C output/libopencv .
       - name: upload
         uses: actions/upload-artifact@v4
         with:
@@ -285,6 +278,14 @@ jobs:
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
       #       ..
       #     cmake --build . -j 4
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
 
   release-macos:
     permissions:
@@ -305,6 +306,13 @@ jobs:
           cd artifacts
 
           mkdir -p libopencv
+          libtool -static -o libopencv-macos-arm64/libopencv/libopencv.a \
+            libopencv-macos-arm64/libopencv/lib/**/*.a
+          libtool -static -o libopencv-macos-x64/libopencv/libopencv.a \
+            libopencv-macos-x64/libopencv/lib/**/*.a
+          rm -rf libopencv-macos-arm64/libopencv/lib
+          rm -rf libopencv-macos-x64/libopencv/lib
+          
           cp -rf libopencv-macos-arm64/libopencv/* libopencv/
           cp -rf libopencv-macos-x64/libopencv/* libopencv/
           lipo -create \

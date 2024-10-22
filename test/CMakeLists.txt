@@ -8,17 +8,11 @@ endif()
 # opencv4 requires c++11
 set(CMAKE_CXX_STANDARD 11)
 
-if(LINUX OR APPLE)
+if(UNIX)
     find_package(Iconv REQUIRED)
 endif()
 
-if(APPLE OR IOS)
-    # set OpenCV_DIR to where opencv2.framework resides
-    find_library(OpenCV_LIBS NAMES opencv2 PATHS ${OpenCV_DIR})
-else()
-    # set OpenCV_DIR to where OpenCVConfig.cmake resides
-    find_package(OpenCV REQUIRED)
-endif()
+find_package(OpenCV REQUIRED)
 find_package(FFMPEG REQUIRED)
 
 message(STATUS "OpenCV found: ${OpenCV_VERSION}")
