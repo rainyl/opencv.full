@@ -8,7 +8,7 @@ endif()
 # opencv4 requires c++11
 set(CMAKE_CXX_STANDARD 11)
 
-if(UNIX)
+if(UNIX AND NOT ANDROID)
     find_package(Iconv REQUIRED)
 endif()
 
