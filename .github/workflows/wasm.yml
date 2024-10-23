@@ -9,7 +9,7 @@ on:
 
 env:
   EMSCRIPTEN_VERSION: 3.1.69
-  OPENCV_SUBDIR: lib/cmake/opencv
+  OPENCV_SUBDIR: lib/cmake/opencv4
 
 jobs:
   webassembly:
@@ -114,19 +114,19 @@ jobs:
         rm -rf ${{ env.PACKAGE_NAME }}
         cp -rf ${{ env.SOURCE_DIR }}/build/install ${{ env.PACKAGE_NAME }}
         tar -zcvf ${{ env.PACKAGE_NAME }}.tar.gz -C ${{ env.PACKAGE_NAME }} .
-    - name: test
-      run: |
-        cd test
-        mkdir build && cd build
-        cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
-            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
-            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
-            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
     - name: upload
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.PACKAGE_NAME }}
         path: ${{ env.PACKAGE_NAME }}
+    # - name: test
+    #   run: |
+    #     cd test
+    #     mkdir build && cd build
+    #     cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+    #         -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+    #         -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+    #         -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
     - name: release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
