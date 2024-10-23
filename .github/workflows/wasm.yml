@@ -18,8 +18,8 @@ jobs:
       matrix:
         opencv-version: [4.10.0]
     env:
-      SOURCE_DIR: opencv-${{ matrix.opencv-version }}
-      CONTRIB_SOURCE_DIR: opencv_contrib-${{ matrix.opencv-version }}
+      SOURCE_DIR: ${{ github.workspace}}/opencv-${{ matrix.opencv-version }}
+      CONTRIB_SOURCE_DIR: ${{ github.workspace}}/opencv_contrib-${{ matrix.opencv-version }}
       PACKAGE_NAME: libopencv-webassembly
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace}}/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
