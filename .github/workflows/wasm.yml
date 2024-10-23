@@ -1,0 +1,169 @@
+name: wasm
+# on: pull_request
+on:
+  push:
+    tags:
+      - '*'
+  # pull_request:
+  #   branches: ["main"]
+
+env:
+  EMSCRIPTEN_VERSION: 3.1.28
+
+permissions:
+  contents: read
+
+jobs:
+  webassembly:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+    env:
+      COMMON_CMAKE_OPTIONS: |
+        -DCMAKE_TOOLCHAIN_FILE=../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+        -DCMAKE_INSTALL_PREFIX=install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="../../opencv_contrib-${{ matrix.opencv-version }}/modules" \
+    steps:
+    - uses: actions/checkout@v4
+    - name: emsdk
+      run: |
+        git clone https://github.com/emscripten-core/emsdk.git
+        cd emsdk
+        ./emsdk install $EMSCRIPTEN_VERSION
+        ./emsdk activate $EMSCRIPTEN_VERSION
+    - name: setup-opencv-source
+      run: |
+        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv-${{ matrix.opencv-version }}
+        git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib-${{ matrix.opencv-version }}
+        echo "SOURCE_DIR=opencv-${{ matrix.opencv-version }}" >> $GITHUB_ENV
+        echo "PACKAGE_NAME=opencv-${{ matrix.opencv-version }}-webassembly" >> $GITHUB_ENV
+    - name: build
+      run: |
+        source emsdk/emsdk_env.sh
+        cd ${{ env.SOURCE_DIR }}
+        # patch -p1 -i ../patches/opencv-${{ matrix.opencv-version }}-unsafe-xadd.patch
+        mkdir build && cd build
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_VULKAN=OFF \
+            -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+        cmake --build . -j $(nproc)
+        cmake --build . --target install
+    - name: build-simd
+      run: |
+        source emsdk/emsdk_env.sh
+        cd ${{ env.SOURCE_DIR }}
+        mkdir build-simd && cd build-simd
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=OFF -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_VULKAN=OFF \
+            -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+        cmake --build . -j $(nproc)
+        cmake --build . --target install
+    - name: build-threads
+      run: |
+        source emsdk/emsdk_env.sh
+        cd ${{ env.SOURCE_DIR }}
+        # patch -p1 -R -i ../patches/opencv-${{ matrix.opencv-version }}-unsafe-xadd.patch
+        mkdir build-threads && cd build-threads
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=OFF -DBUILD_WASM_INTRIN_TESTS=OFF \
+            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_VULKAN=OFF \
+            -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+        cmake --build . -j $(nproc)
+        cmake --build . --target install
+    - name: build-simd-threads
+      run: |
+        source emsdk/emsdk_env.sh
+        cd ${{ env.SOURCE_DIR }}
+        mkdir build-simd-threads && cd build-simd-threads
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCPU_BASELINE="" -DCPU_DISPATCH="" -DWITH_PTHREADS_PF=ON -DCV_ENABLE_INTRINSICS=ON -DBUILD_WASM_INTRIN_TESTS=OFF \
+            -DCMAKE_C_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-fno-rtti -fno-exceptions -s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            `cat ../../options.txt` -DBUILD_opencv_world=OFF -DWITH_VULKAN=OFF \
+            -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON ..
+        cmake --build . -j $(nproc)
+        cmake --build . --target install
+    - name: package
+      run: |
+        rm -rf ${{ env.PACKAGE_NAME }}
+        mkdir -p ${{ env.PACKAGE_NAME }}
+        cp -rf ${{ env.SOURCE_DIR }}/build/install ${{ env.PACKAGE_NAME }}/basic
+        cp -rf ${{ env.SOURCE_DIR }}/build-simd/install ${{ env.PACKAGE_NAME }}/simd
+        cp -rf ${{ env.SOURCE_DIR }}/build-threads/install ${{ env.PACKAGE_NAME }}/threads
+        cp -rf ${{ env.SOURCE_DIR }}/build-simd-threads/install ${{ env.PACKAGE_NAME }}/simd-threads
+        rm -f ${{ env.PACKAGE_NAME }}.zip
+        zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
+    - name: set-opencv-dir
+      if: matrix.opencv-version == '4.10.0'
+      run: echo "OPENCV_SUBDIR=lib/cmake/opencv4" >> $GITHUB_ENV
+    - name: test
+      run: |
+        cd test
+        mkdir build && cd build
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0" \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/basic/${{ env.OPENCV_SUBDIR }} ..
+        cmake --build . -j $(nproc)
+    - name: test-simd
+      run: |
+        cd test
+        mkdir build-simd && cd build-simd
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=0 -msimd128" \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/simd/${{ env.OPENCV_SUBDIR }} ..
+        cmake --build . -j $(nproc)
+    - name: test-threads
+      run: |
+        cd test
+        mkdir build-threads && cd build-threads
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4" \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/threads/${{ env.OPENCV_SUBDIR }} ..
+        cmake --build . -j $(nproc)
+    - name: test-simd-threads
+      run: |
+        cd test
+        mkdir build-simd-threads && cd build-simd-threads
+        cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_C_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DCMAKE_CXX_FLAGS="-s WASM=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=4 -msimd128" \
+            -DOpenCV_DIR=$GITHUB_WORKSPACE/${{ env.PACKAGE_NAME }}/simd-threads/${{ env.OPENCV_SUBDIR }} ..
+        cmake --build . -j $(nproc)
+    - name: upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PACKAGE_NAME }}
+        path: ${{ env.PACKAGE_NAME }}.zip
+
+  release:
+    permissions:
+      contents: write  # for softprops/action-gh-release to create a release
+    needs: [webassembly]
+    runs-on: ubuntu-latest
+    steps:
+    - name: download
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: create-release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: artifacts/*/*.zip

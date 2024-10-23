@@ -1,6 +1,11 @@
-build/
+build*/
+test/
+ffmpeg*
+opencv/
+opencv_contrib/
 # Prerequisites
 *.d
+.vscode
 
 # Compiled Object files
 *.slo

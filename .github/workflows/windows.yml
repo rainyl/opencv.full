@@ -1,0 +1,172 @@
+name: windows
+on:
+  push:
+    tags:
+      - "*"
+  pull_request:
+    branches: ["main"]
+
+env:
+  FFMPEG_ROOT: C:\ffmpeg
+  SOURCE_DIR: opencv
+
+jobs:
+  windows:
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+        os:
+          - { arch: x64, toolset-version: v142 }
+    runs-on: windows-2019
+    env:
+      UseMultiToolTask: true
+      PACKAGE_NAME: libopencv-windows-${{ matrix.os.arch }}
+      COMMON_CMAKE_OPTIONS: |
+        $(type ${{ github.workspace }}/options.txt) `
+        -G "Visual Studio 16 2019" `
+        -DCMAKE_INSTALL_PREFIX=install `
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
+        -DFFMPEG_ARCH=${{ matrix.os.arch }} `
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
+          
+          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+      - name: download ffmpeg
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "rainyl/FFmpeg-Builds"
+          latest: true
+          fileName: "ffmpeg-n6.1-latest-win64-lgpl-shared-6.1.zip"
+          out-file-path: 'ffmpeg_tmp'
+          extract: true
+      - name: setup ffmpeg
+        run: |
+          ls ffmpeg_tmp
+          mkdir -Force $env:FFMPEG_ROOT/cmake
+          Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
+          cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
+      - name: build
+        run: |
+          mkdir -Force ${{ env.SOURCE_DIR }}/build
+          cd ${{ env.SOURCE_DIR }}/build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
+          cmake --build . --config Release --target install -j 4
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
+          cp -Recurse -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+      - name: test
+        run: |
+          cd test
+          mkdir build; cd build
+          cmake -T ${{ matrix.os.toolset-version }},host=x64 `
+            -DCMAKE_INSTALL_PREFIX=install `
+            -A x64 `
+            -DOpenCV_DIR="${{ github.workspace }}\${{ env.PACKAGE_NAME }}" `
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake" `
+            -DOpenCV_STATIC=ON ..
+          cmake --build . --config Release -j 4
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
+
+  windows-arm64:
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+        os:
+          - { arch: arm64, toolset-version: v142 }
+    runs-on: windows-2019
+    env:
+      UseMultiToolTask: true
+      PACKAGE_NAME: libopencv-windows-${{ matrix.os.arch }}
+      COMMON_CMAKE_OPTIONS: |
+        $(type ${{ github.workspace }}/options.txt) `
+        -G "Visual Studio 16 2019" `
+        -DCMAKE_INSTALL_PREFIX=install `
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
+        -A ARM64 `
+        -DCMAKE_SYSTEM_NAME=Windows `
+        -DCMAKE_SYSTEM_PROCESSOR=ARM64 `
+        -DFFMPEG_ARCH=${{ matrix.os.arch }} `
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
+          
+          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+      - name: download ffmpeg
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "rainyl/FFmpeg-Builds"
+          latest: true
+          fileName: "ffmpeg-n6.1-latest-winarm64-lgpl-shared-6.1.zip"
+          out-file-path: 'ffmpeg_tmp'
+          extract: true
+      - name: setup ffmpeg
+        run: |
+          ls ffmpeg_tmp
+          mkdir -Force $env:FFMPEG_ROOT/cmake
+          Move-Item -Force ffmpeg_tmp\*\* $env:FFMPEG_ROOT
+          cp -Recurse -Force ${{ github.workspace }}/cmake/ffmpeg-config.cmake $env:FFMPEG_ROOT/cmake/
+      - name: build
+        run: |
+          mkdir -Force ${{ env.SOURCE_DIR }}/build
+          cd ${{ env.SOURCE_DIR }}/build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} -S .. `
+            -DWITH_IPP=OFF `
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake"
+          cmake --build . --config Release --target install -j 4
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          Copy-Item -Verbose -Recurse -Path "${{ env.SOURCE_DIR }}\build\install\*" -Destination "${{ env.PACKAGE_NAME }}"
+          cp -Recurse -Force $env:FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+      - name: test
+        run: |
+          cd test
+          mkdir build; cd build
+          cmake -T ${{ matrix.os.toolset-version }},host=x64 `
+            -DCMAKE_INSTALL_PREFIX=install `
+            -A ARM64 `
+            -DOpenCV_DIR="${{ github.workspace }}\${{ env.PACKAGE_NAME }}" `
+            -DFFMPEG_DIR="$env:FFMPEG_ROOT/cmake" `
+            -DOpenCV_STATIC=ON ..
+          cmake --build . --config Release -j 4
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz

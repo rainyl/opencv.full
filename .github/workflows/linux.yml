@@ -1,0 +1,163 @@
+name: linux
+on:
+  push:
+    tags:
+      - "*"
+  pull_request:
+    branches: ["main"]
+
+env:
+  FFMPEG_ROOT: /tmp/ffmpeg
+  SOURCE_DIR: opencv
+  OPENCV_SUBDIR: lib/cmake/opencv4
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+        os:
+          - { arch: x64, ffmpeg_arch: amd64 }
+    env:
+      PACKAGE_NAME: libopencv-linux-${{ matrix.os.arch }}
+      COMMON_CMAKE_OPTIONS: |
+        -DCMAKE_INSTALL_PREFIX=install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+    steps:
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev
+
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
+          
+          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+      - name: setup ffmpeg
+        run: |
+          wget -q -O ffmpeg.tar.xz https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linux64-lgpl-shared-6.1.tar.xz
+          mkdir -p $FFMPEG_ROOT/cmake
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build && cd build
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
+          cmake --build . -j $(nproc)
+          cmake --build . --target install
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
+
+          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+      - name: test
+        run: |
+          cd test
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
+            -DFFMPEG_DIR=$FFMPEG_ROOT/cmake ..
+          cmake --build . -j $(nproc)
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
+
+  linux-arm64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opencv-version: [4.10.0]
+        os:
+          - { arch: arm64, ffmpeg_arch: arm64 }
+    env:
+      PACKAGE_NAME: libopencv-linux-${{ matrix.os.arch }}
+      COMMON_CMAKE_OPTIONS: |
+        -DCMAKE_INSTALL_PREFIX=install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+    steps:
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install g++-aarch64-linux-gnu
+
+      - uses: actions/checkout@v4
+      - name: setup-opencv-source
+        run: |
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
+          
+          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+
+          git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
+      - name: setup ffmpeg
+        run: |
+          wget -q -O ffmpeg.tar.xz https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linuxarm64-lgpl-shared-6.1.tar.xz
+          mkdir -p $FFMPEG_ROOT/cmake
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
+      - name: build
+        run: |
+          cd ${{ env.SOURCE_DIR }}
+          mkdir build && cd build
+          cmake `cat ${{ github.workspace }}/options.txt` \
+            ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake \
+            -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
+            -DFFMPEG_ARCH=${{ matrix.os.ffmpeg_arch }}
+          cmake --build . -j $(nproc)
+          cmake --build . --target install
+      - name: package
+        run: |
+          mkdir ${{ env.PACKAGE_NAME }}
+          cp -rf ${{ env.SOURCE_DIR }}/build/install/* ${{ env.PACKAGE_NAME }}/
+
+          cp -rf $FFMPEG_ROOT ${{ env.PACKAGE_NAME }}/ffmpeg
+
+          tar -C ${{ env.PACKAGE_NAME }} -zcvf ${{ env.PACKAGE_NAME }}.tar.gz .
+      - name: test
+        run: |
+          cd test
+          mkdir build && cd build
+          cmake ${{ env.COMMON_CMAKE_OPTIONS }} \
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/aarch64-linux-gnu.toolchain.cmake \
+            -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }} \
+            -DFFMPEG_DIR=$FFMPEG_ROOT/cmake ..
+          cmake --build . -j $(nproc)
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
