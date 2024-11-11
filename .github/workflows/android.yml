@@ -29,6 +29,7 @@ jobs:
         -DANDROID_STL=c++_static \
         -DANDROID_ABI=${{ matrix.abi }} \
         -DANDROID_ARM_NEON=ON \
+        -DPARALLEL_ENABLE_PLUGINS=OFF \
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" \
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
         -DWITH_ANDROID_MEDIANDK=ON \
