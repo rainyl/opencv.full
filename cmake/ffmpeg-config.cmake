@@ -203,15 +203,6 @@ macro(ffmpeg_find_component component)
             HINTS ${PC_FFMPEG_${component}_INCLUDE_DIRS}
             PATHS
             "${FFMPEG_ROOT}/include"
-            ~/Library/Frameworks
-            /Library/Frameworks
-            /usr/local/include
-            /usr/include
-            /sw/include # Fink
-            /opt/local/include # DarwinPorts
-            /opt/csw/include # Blastwave
-            /opt/include
-            /usr/freeware/include
             DOC "FFMPEG component ${component_name} include directory"
     )
 
@@ -241,17 +232,6 @@ macro(ffmpeg_find_component component)
                 PATHS
                 "${FFMPEG_ROOT}/lib"
                 "${FFMPEG_ROOT}/lib/${FFMPEG_ARCH}"
-                ~/Library/Frameworks
-                /Library/Frameworks
-                /usr/local/lib
-                /usr/local/lib64
-                /usr/lib
-                /usr/lib64
-                /sw/lib
-                /opt/local/lib
-                /opt/csw/lib
-                /opt/lib
-                /usr/freeware/lib64
                 "${FFMPEG_ROOT}/bin"
                 "${FFMPEG_ROOT}/bin/${FFMPEG_ARCH}"
                 DOC "FFMPEG component ${component_name} location"
