@@ -19,6 +19,7 @@ jobs:
         abi: [armeabi-v7a, arm64-v8a, x86_64, x86]
     env:
       PACKAGE_NAME: libopencv-android-${{ matrix.abi }}
+      FFMPEG_URL: https://sourceforge.net/projects/avbuild/files/android/ffmpeg-7.1-android-lite.tar.xz
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_POLICY_DEFAULT_CMP0057=NEW \
         -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
@@ -44,12 +45,12 @@ jobs:
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
           
-          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+          git apply -p 0 patches/opencv-${{ matrix.opencv-version }}-detect_ffmpeg.patch
           
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/android/ffmpeg-6.1-android-lite.tar.xz
+          wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
           mkdir -p tmp
           tar xf ffmpeg.tar.xz -C tmp --strip-components=1
 
