@@ -142,14 +142,14 @@ endif ()
 set(
         _DEFAULT_COMPONENTS
         avcodec
-        avdevice
         avformat
-        avfilter
-        avresample
         avutil
-        postproc
         swscale
-        swresample
+        # avdevice
+        # avfilter
+        # avresample
+        # postproc
+        # swresample
 )
 
 # set(FFMPEG_FIND_COMPONENTS
@@ -344,7 +344,19 @@ macro(ffmpeg_set_soname)
         )
 
         if (_result EQUAL 0 AND _output MATCHES "^@rpath/")
-            set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_output}")
+            # extract soname, some libraries have multiple soname
+            string(REGEX REPLACE "\n" ";" _soname_list "${_output}")
+            list(GET _soname_list 0 _soname)
+            string(REGEX REPLACE "^@rpath/" "" _soname "${_soname}")
+            string(STRIP ${_soname} _soname)
+            # set target soname
+            set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_soname}")
+            # concat library path and add to FFMPEG_LIB_PATHS
+            get_filename_component(_comp_dir ${FFMPEG_${component}_LIBRARY} DIRECTORY)
+            set(_loc_real "${_comp_dir}/${_soname}")
+            if (EXISTS "${_loc_real}")
+                ffmpeg_append_lib_path("${_loc_real}")
+            endif ()
         endif ()
     elseif (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux|FreeBSD")
         execute_process(
@@ -354,9 +366,12 @@ macro(ffmpeg_set_soname)
         )
 
         if (_result EQUAL 0)
+            # extract soname
             string(REGEX REPLACE "[ \t]+SONAME[ \t]+([^ \t]+)" "\\1" _soname "${_output}")
             string(STRIP ${_soname} _soname)
+            # set target soname
             set_property(TARGET FFMPEG::${component} PROPERTY IMPORTED_SONAME "${_soname}")
+            # concat library path and add to FFMPEG_LIB_PATHS
             get_filename_component(_loc_dir ${FFMPEG_${component}_LIBRARY} DIRECTORY)
             set(_loc_soname "${_loc_dir}/${_soname}")
             ffmpeg_append_lib_path(${_loc_soname})
@@ -423,6 +438,9 @@ macro(ffmpeg_create_target component)
     endif ()
 endmacro()
 
+##################################################################################
+# Main logic
+##################################################################################
 foreach (component IN LISTS FFMPEG_FIND_COMPONENTS)
     if (NOT component IN_LIST _DEFAULT_COMPONENTS)
         message(FATAL_ERROR "Unknown FFMPEG component specified: ${component}.")
@@ -435,7 +453,7 @@ foreach (component IN LISTS FFMPEG_FIND_COMPONENTS)
     if (FFMPEG_${component}_FOUND)
         ffmpeg_create_target(${component})
 
-        list(APPEND FFMPEG_LIB_PATHS ${FFMPEG_${component}_LIBRARY})
+        # list(APPEND FFMPEG_LIB_PATHS ${FFMPEG_${component}_LIBRARY})
         set(FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} FFMPEG::${component})
         set(FFMPEG_DEFINITIONS ${FFMPEG_DEFINITIONS} ${FFMPEG_${component}_DEFINITIONS})
         set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS} ${FFMPEG_${component}_INCLUDE_DIR})

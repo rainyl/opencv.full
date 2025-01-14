@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         abi: [armeabi-v7a, arm64-v8a, x86_64, x86]
     env:
       PACKAGE_NAME: libopencv-android-${{ matrix.abi }}

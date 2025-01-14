@@ -6,6 +6,7 @@ opencv_contrib/
 # Prerequisites
 *.d
 .vscode
+.idea
 
 # Compiled Object files
 *.slo

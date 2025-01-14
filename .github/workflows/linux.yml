@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         os:
           - { arch: x64, ffmpeg_arch: amd64 }
     env:
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         os:
           - { arch: arm64, ffmpeg_arch: arm64 }
     env:

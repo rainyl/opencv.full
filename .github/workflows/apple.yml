@@ -23,7 +23,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
     env:
       PACKAGE_NAME: libopencv-ios-arm64
       COMMON_CMAKE_OPTIONS: |
@@ -100,7 +100,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         platform:
           - { arch: x64, name: SIMULATOR64 }
           # - { arch: arm64, name: SIMULATORARM64 }
@@ -216,7 +216,7 @@ jobs:
   macos:
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         osname:
           - { os: macos-14, arch: x64, platform: MAC }
           - { os: macos-14, arch: arm64, platform: MAC_ARM64 }
@@ -247,7 +247,7 @@ jobs:
       - name: setup ffmpeg
         shell: zsh {0}
         run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-lite.tar.xz
+          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-7.1-macOS-default.tar.xz
           mkdir -p $FFMPEG_ROOT
           tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           mkdir -p $FFMPEG_ROOT/cmake
