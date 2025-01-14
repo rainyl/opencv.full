@@ -23,7 +23,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
     env:
       PACKAGE_NAME: libopencv-ios-arm64
       COMMON_CMAKE_OPTIONS: |
@@ -50,9 +50,9 @@ jobs:
         shell: zsh {0}
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
-          
-          # git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
-          
+
+          # git apply -p 0 patches/opencv-${{ matrix.opencv-version }}-detect_ffmpeg.patch
+
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       # - name: setup ffmpeg
       #   run: |
@@ -100,7 +100,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         platform:
           - { arch: x64, name: SIMULATOR64 }
           # - { arch: arm64, name: SIMULATORARM64 }
@@ -129,9 +129,9 @@ jobs:
         shell: zsh {0}
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
-          
-          # git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
-          
+
+          # git apply -p 0 patches/opencv-${{ matrix.opencv-version }}-detect_ffmpeg.patch
+
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       # - name: setup ffmpeg
       #   run: |
@@ -178,7 +178,7 @@ jobs:
 
   release-ios:
     permissions:
-      contents: write  # for softprops/action-gh-release to create a release
+      contents: write # for softprops/action-gh-release to create a release
     needs: [ios, ios-simulator]
     runs-on: macos-14
     steps:
@@ -193,16 +193,16 @@ jobs:
         shell: zsh {0}
         run: |
           cd artifacts
-          
+
           mkdir -p libopencv
           cp -rf libopencv-iossimulator-x64/libopencv/* libopencv/
           cp -rf libopencv-ios-arm64/libopencv/* libopencv/
-          
+
           lipo -create \
             libopencv-iossimulator-x64/libopencv/libopencv.a \
             libopencv-ios-arm64/libopencv/libopencv.a \
             -output libopencv/libopencv.a
-          
+
           zip -9 -y -r libopencv-ios.zip libopencv
       - name: release
         uses: softprops/action-gh-release@v1
@@ -216,13 +216,14 @@ jobs:
   macos:
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         osname:
           - { os: macos-14, arch: x64, platform: MAC }
           - { os: macos-14, arch: arm64, platform: MAC_ARM64 }
     runs-on: ${{ matrix.osname.os }}
     env:
       PACKAGE_NAME: libopencv-macos-${{ matrix.osname.arch }}
+      FFMPEG_URL: https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-7.1-macOS-default.tar.xz
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/ios.toolchain.cmake \
         -DDEPLOYMENT_TARGET=$MAC_DEPLOYMENT_TARGET \
@@ -240,14 +241,14 @@ jobs:
         shell: zsh {0}
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
-          
-          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
-          
+
+          git apply -p 0 patches/opencv-${{ matrix.opencv-version }}-detect_ffmpeg.patch
+
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       - name: setup ffmpeg
         shell: zsh {0}
         run: |
-          wget -q -O ffmpeg.tar.xz https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-6.1-macOS-lite.tar.xz
+          wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
           mkdir -p $FFMPEG_ROOT
           tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           mkdir -p $FFMPEG_ROOT/cmake
@@ -297,7 +298,7 @@ jobs:
 
   release-macos:
     permissions:
-      contents: write  # for softprops/action-gh-release to create a release
+      contents: write # for softprops/action-gh-release to create a release
     needs: [macos]
     runs-on: macos-14
     steps:
@@ -320,14 +321,14 @@ jobs:
             libopencv-macos-x64/libopencv/lib/**/*.a
           rm -rf libopencv-macos-arm64/libopencv/lib
           rm -rf libopencv-macos-x64/libopencv/lib
-          
+
           cp -rf libopencv-macos-arm64/libopencv/* libopencv/
           cp -rf libopencv-macos-x64/libopencv/* libopencv/
           lipo -create \
             libopencv-macos-arm64/libopencv/libopencv.a \
             libopencv-macos-x64/libopencv/libopencv.a \
             -output libopencv/libopencv.a
-          
+
           zip -9 -y -r libopencv-macos.zip libopencv
       - name: release
         uses: softprops/action-gh-release@v1

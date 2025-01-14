@@ -16,11 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         os:
           - { arch: x64, ffmpeg_arch: amd64 }
     env:
       PACKAGE_NAME: libopencv-linux-${{ matrix.os.arch }}
+      FFMPEG_URL: https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linux64-lgpl-shared-7.1.tar.xz
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
@@ -36,13 +37,13 @@ jobs:
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git ${{ env.SOURCE_DIR }}
-          
-          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
-          
+
+          git apply -p 0 patches/opencv-${{ matrix.opencv-version }}-detect_ffmpeg.patch
+
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linux64-lgpl-shared-6.1.tar.xz
+          wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
           mkdir -p $FFMPEG_ROOT/cmake
           tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
@@ -90,11 +91,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        opencv-version: [4.10.0]
+        opencv-version: [4.11.0]
         os:
           - { arch: arm64, ffmpeg_arch: arm64 }
     env:
       PACKAGE_NAME: libopencv-linux-${{ matrix.os.arch }}
+      FFMPEG_URL: https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linuxarm64-lgpl-shared-7.1.tar.xz
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_BUILD_TYPE=Release \
@@ -110,13 +112,13 @@ jobs:
       - name: setup-opencv-source
         run: |
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv.git opencv
-          
-          git apply -p 0 patches/opencv-4.10.0-detect_ffmpeg.patch
+
+          git apply -p 0 patches/opencv-${{ matrix.opencv-version }}-detect_ffmpeg.patch
 
           git clone -b ${{ matrix.opencv-version }} https://github.com/opencv/opencv_contrib.git opencv_contrib
       - name: setup ffmpeg
         run: |
-          wget -q -O ffmpeg.tar.xz https://github.com/rainyl/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-linuxarm64-lgpl-shared-6.1.tar.xz
+          wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
           mkdir -p $FFMPEG_ROOT/cmake
           tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
