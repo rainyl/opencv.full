@@ -145,11 +145,11 @@ set(
         avformat
         avutil
         swscale
-        # avdevice
-        # avfilter
-        # avresample
-        # postproc
-        # swresample
+        avdevice
+        avfilter
+        avresample
+        postproc
+        swresample
 )
 
 # set(FFMPEG_FIND_COMPONENTS
