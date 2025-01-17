@@ -224,6 +224,10 @@ macro(ffmpeg_find_component component)
             ffmpeg_find_dll()
         endif ()
 
+        if (FFMPEG_${component}_LIBRARY AND FFMPEG_${component}_INCLUDE_DIR)
+            ffmpeg_append_lib_path(${FFMPEG_${component}_LIBRARY})
+        endif()
+
     else ()
         find_library(
                 FFMPEG_${component}_LIBRARY
