@@ -109,7 +109,7 @@ jobs:
         -DCMAKE_SYSTEM_NAME=Windows `
         -DCMAKE_SYSTEM_PROCESSOR=ARM64 `
         -DCPU_BASELINE=NEON `
-        -DCPU_DISPATCH=NEON_DOTPROD ` # TODO: NEON_FP16 fails on arm64 windows
+        -DCPU_DISPATCH=NEON_DOTPROD `
         -DFFMPEG_ARCH=${{ matrix.os.arch }} `
     steps:
       - uses: actions/checkout@v4
