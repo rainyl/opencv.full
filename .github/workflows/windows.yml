@@ -14,16 +14,16 @@ jobs:
   windows:
     strategy:
       matrix:
-        opencv-version: [4.11.0]
+        opencv-version: [4.12.0]
         os:
-          - { arch: x64, toolset-version: v142 }
-    runs-on: windows-2019
+          - { arch: x64, toolset-version: v143 }
+    runs-on: windows-2022
     env:
       UseMultiToolTask: true
       PACKAGE_NAME: libopencv-windows-${{ matrix.os.arch }}
       COMMON_CMAKE_OPTIONS: |
         $(type ${{ github.workspace }}/options.txt) `
-        -G "Visual Studio 16 2019" `
+        -G "Visual Studio 17 2022" `
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
@@ -92,16 +92,16 @@ jobs:
   windows-arm64:
     strategy:
       matrix:
-        opencv-version: [4.11.0]
+        opencv-version: [4.12.0]
         os:
-          - { arch: arm64, toolset-version: v142 }
-    runs-on: windows-2019
+          - { arch: arm64, toolset-version: v143 }
+    runs-on: windows-2022
     env:
       UseMultiToolTask: true
       PACKAGE_NAME: libopencv-windows-${{ matrix.os.arch }}
       COMMON_CMAKE_OPTIONS: |
         $(type ${{ github.workspace }}/options.txt) `
-        -G "Visual Studio 16 2019" `
+        -G "Visual Studio 17 2022" `
         -DCMAKE_INSTALL_PREFIX=install `
         -DOPENCV_EXTRA_MODULES_PATH="${{ github.workspace }}/opencv_contrib/modules" `
         -DCMAKE_POLICY_DEFAULT_CMP0074=NEW `
