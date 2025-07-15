@@ -23,7 +23,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        opencv-version: [4.11.0]
+        opencv-version: [4.12.0]
     env:
       PACKAGE_NAME: libopencv-ios-arm64
       COMMON_CMAKE_OPTIONS: |
@@ -70,7 +70,7 @@ jobs:
             ${{ env.COMMON_CMAKE_OPTIONS }} -S .. \
             -DPLATFORM=OS64 \
             -DWITH_FFMPEG=OFF \
-            -DBUILD_opencv_world=ON
+            -DBUILD_opencv_world=OFF
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
@@ -80,7 +80,9 @@ jobs:
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
           rm -rf output/libopencv/lib
-          # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
+
+          # cp -rf $FFMPEG_ROOT ${{ env.SOURCE_DIR }}/build/install/ffmpeg
+          tar -zcf ${{ env.PACKAGE_NAME }}.tar.gz -C ${{ env.SOURCE_DIR }}/build/install .
       - name: upload
         uses: actions/upload-artifact@v4
         with:
@@ -95,12 +97,20 @@ jobs:
       #       -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
       #     cmake --build . -j 4
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
 
   ios-simulator:
     runs-on: macos-14
     strategy:
       matrix:
-        opencv-version: [4.11.0]
+        opencv-version: [4.12.0]
         platform:
           - { arch: x64, name: SIMULATOR64 }
           # - { arch: arm64, name: SIMULATORARM64 }
@@ -150,7 +160,7 @@ jobs:
             -DPLATFORM=${{ matrix.platform.name }} \
             -DWITH_FFMPEG=OFF \
             -DOPENCV_DISABLE_FILESYSTEM_SUPPORT=ON \
-            -DBUILD_opencv_world=ON
+            -DBUILD_opencv_world=OFF
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
@@ -160,8 +170,15 @@ jobs:
           cp -rf ${{ env.SOURCE_DIR }}/build/install/* output/libopencv/
           libtool -static -o output/libopencv/libopencv.a output/libopencv/lib/**/*.a
           rm -rf output/libopencv/lib
-          # cp -rf $FFMPEG_ROOT output/libopencv/ffmpeg
+
+          # cp -rf $FFMPEG_ROOT ${{ env.SOURCE_DIR }}/build/install/ffmpeg
+          tar -zcf ${{ env.PACKAGE_NAME }}.tar.gz -C ${{ env.SOURCE_DIR }}/build/install .
       - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}-no-world
+          path: ${{ env.PACKAGE_NAME }}.tar.gz
+      - name: upload1
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}
@@ -175,6 +192,14 @@ jobs:
       #       -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
       #       -DOpenCV_DIR=${{ github.workspace }}/${{ env.PACKAGE_NAME }}/${{ env.OPENCV_SUBDIR }}
       #     cmake --build . -j 4
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: false
+          files: |
+            ${{ env.PACKAGE_NAME }}.tar.gz
 
   release-ios:
     permissions:
@@ -216,10 +241,10 @@ jobs:
   macos:
     strategy:
       matrix:
-        opencv-version: [4.11.0]
+        opencv-version: [4.12.0]
         osname:
-          - { os: macos-14, arch: x64, platform: MAC }
-          - { os: macos-14, arch: arm64, platform: MAC_ARM64 }
+          - { os: macos-14, arch: x64, platform: MAC, arch1: x86_64 }
+          - { os: macos-14, arch: arm64, platform: MAC_ARM64, arch1: arm64 }
     runs-on: ${{ matrix.osname.os }}
     env:
       PACKAGE_NAME: libopencv-macos-${{ matrix.osname.arch }}
@@ -263,7 +288,7 @@ jobs:
             -DPLATFORM=${{ matrix.osname.platform }} \
             -DWITH_FFMPEG=ON \
             -DFFMPEG_DIR="$FFMPEG_ROOT/cmake" \
-            -DBUILD_opencv_world=ON
+            -DBUILD_opencv_world=OFF
           cmake --build . -j 4
           cmake --build . --target install
       - name: package
