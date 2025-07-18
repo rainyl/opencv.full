@@ -276,6 +276,7 @@ jobs:
           wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
           mkdir -p $FFMPEG_ROOT
           tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          ./scripts/thin_dylib_macos.sh ${{ matrix.osname.arch1 }} $FFMPEG_ROOT/lib
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: build
