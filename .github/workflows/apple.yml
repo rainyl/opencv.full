@@ -248,7 +248,7 @@ jobs:
     runs-on: ${{ matrix.osname.os }}
     env:
       PACKAGE_NAME: libopencv-macos-${{ matrix.osname.arch }}
-      FFMPEG_URL: https://sourceforge.net/projects/avbuild/files/macOS/ffmpeg-7.1-macOS-default.tar.xz
+      FFMPEG_URL: https://github.com/rainyl/avbuild/releases/download/7.1.0/ffmpeg-7.1-macOS-default.tar.xz
       COMMON_CMAKE_OPTIONS: |
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/ios.toolchain.cmake \
         -DDEPLOYMENT_TARGET=$MAC_DEPLOYMENT_TARGET \
@@ -276,6 +276,7 @@ jobs:
           wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
           mkdir -p $FFMPEG_ROOT
           tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          rm -rf $FFMPEG_ROOT/lib/*.a
           ./scripts/thin_dylib_macos.sh ${{ matrix.osname.arch1 }} $FFMPEG_ROOT/lib
           mkdir -p $FFMPEG_ROOT/cmake
           cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
