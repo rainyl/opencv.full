@@ -40,7 +40,7 @@ jobs:
       - name: download ffmpeg
         uses: robinraju/release-downloader@v1.10
         with:
-          repository: "rainyl/FFmpeg-Builds"
+          repository: "BtbN/FFmpeg-Builds"
           latest: true
           fileName: "ffmpeg-n7.1-latest-win64-lgpl-shared-7.1.zip"
           out-file-path: "ffmpeg_tmp"
@@ -123,7 +123,7 @@ jobs:
       - name: download ffmpeg
         uses: robinraju/release-downloader@v1.10
         with:
-          repository: "rainyl/FFmpeg-Builds"
+          repository: "BtbN/FFmpeg-Builds"
           latest: true
           fileName: "ffmpeg-n7.1-latest-winarm64-lgpl-shared-7.1.zip"
           out-file-path: "ffmpeg_tmp"
