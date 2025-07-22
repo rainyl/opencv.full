@@ -113,7 +113,7 @@ jobs:
         opencv-version: [4.12.0]
         platform:
           - { arch: x64, name: SIMULATOR64 }
-          # - { arch: arm64, name: SIMULATORARM64 }
+          - { arch: arm64, name: SIMULATORARM64 }
     env:
       PACKAGE_NAME: libopencv-iossimulator-${{ matrix.platform.arch }}
       COMMON_CMAKE_OPTIONS: |
@@ -221,10 +221,12 @@ jobs:
 
           mkdir -p libopencv
           cp -rf libopencv-iossimulator-x64/libopencv/* libopencv/
+          cp -rf libopencv-iossimulator-arm64/libopencv/* libopencv/
           cp -rf libopencv-ios-arm64/libopencv/* libopencv/
 
           lipo -create \
             libopencv-iossimulator-x64/libopencv/libopencv.a \
+            libopencv-iossimulator-arm64/libopencv/libopencv.a \
             libopencv-ios-arm64/libopencv/libopencv.a \
             -output libopencv/libopencv.a
 
