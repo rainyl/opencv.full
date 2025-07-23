@@ -221,12 +221,10 @@ jobs:
 
           mkdir -p libopencv
           cp -rf libopencv-iossimulator-x64/libopencv/* libopencv/
-          cp -rf libopencv-iossimulator-arm64/libopencv/* libopencv/
           cp -rf libopencv-ios-arm64/libopencv/* libopencv/
 
           lipo -create \
             libopencv-iossimulator-x64/libopencv/libopencv.a \
-            libopencv-iossimulator-arm64/libopencv/libopencv.a \
             libopencv-ios-arm64/libopencv/libopencv.a \
             -output libopencv/libopencv.a
 
