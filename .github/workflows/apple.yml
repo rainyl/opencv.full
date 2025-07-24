@@ -328,6 +328,8 @@ jobs:
       contents: write # for softprops/action-gh-release to create a release
     needs: [macos]
     runs-on: macos-14
+    env:
+      FFMPEG_URL: https://github.com/rainyl/avbuild/releases/download/7.1.0/ffmpeg-7.1-macOS-default.tar.xz
     steps:
       - uses: actions/checkout@v4
       - name: download
@@ -336,6 +338,15 @@ jobs:
           path: artifacts
           pattern: libopencv-macos*
           merge-multiple: false
+      - name: setup ffmpeg
+        shell: zsh {0}
+        run: |
+          wget -q -O ffmpeg.tar.xz ${{ env.FFMPEG_URL }}
+          mkdir -p $FFMPEG_ROOT
+          tar xf ffmpeg.tar.xz -C $FFMPEG_ROOT --strip-components=1
+          rm -rf $FFMPEG_ROOT/lib/*.a
+          mkdir -p $FFMPEG_ROOT/cmake
+          cp -rf ${{ github.workspace }}/cmake/ffmpeg-config.cmake $FFMPEG_ROOT/cmake/
       - name: create universal
         shell: zsh {0}
         run: |
@@ -351,6 +362,7 @@ jobs:
 
           cp -rf libopencv-macos-arm64/libopencv/* libopencv/
           cp -rf libopencv-macos-x64/libopencv/* libopencv/
+          cp -rf $FFMPEG_ROOT/* libopencv/ffmpeg/
           lipo -create \
             libopencv-macos-arm64/libopencv/libopencv.a \
             libopencv-macos-x64/libopencv/libopencv.a \
